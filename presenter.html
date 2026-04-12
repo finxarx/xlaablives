@@ -547,7 +547,7 @@
     const SUPABASE_URL = 'https://nvnzyupuecyeepxtiltt.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im52bnp5dXB1ZWN5ZWVweHRpbHR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5ODU3MzEsImV4cCI6MjA5MTU2MTczMX0.xsWsvlR1K66kDtJFtzIKzkpZ5sKa-iwDtL4uIInsif4';
 
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // PDF.js worker
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -576,7 +576,7 @@
         .replace(/(^-|-$)/g, '')
         + '-' + Math.random().toString(36).substring(2, 8);
 
-      const { data, error } = await supabase
+      const { data, error } = await sb
         .from('rooms')
         .insert({ title, slug })
         .select()
@@ -606,7 +606,7 @@
     // ── REALTIME ──
     function setupRealtimeSubscriptions() {
       // Escutar novas mensagens do chat
-      chatSubscription = supabase
+      chatSubscription = sb
         .channel('chat-' + room.id)
         .on('postgres_changes', {
           event: 'INSERT',
@@ -619,7 +619,7 @@
         .subscribe();
 
       // Escutar participantes
-      participantSubscription = supabase
+      participantSubscription = sb
         .channel('participants-' + room.id)
         .on('postgres_changes', {
           event: '*',
@@ -633,7 +633,7 @@
     }
 
     async function loadExistingMessages() {
-      const { data } = await supabase
+      const { data } = await sb
         .from('chat_messages')
         .select('*')
         .eq('room_id', room.id)
@@ -645,7 +645,7 @@
     }
 
     async function updateViewerCount() {
-      const { count } = await supabase
+      const { count } = await sb
         .from('participants')
         .select('*', { count: 'exact', head: true })
         .eq('room_id', room.id)
@@ -693,7 +693,7 @@
 
       // Upload para Supabase Storage
       const filePath = `${room.id}/${file.name}`;
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError } = await sb.storage
         .from('slides')
         .upload(filePath, file, { upsert: true });
 
@@ -703,7 +703,7 @@
       }
 
       // Salvar URL pública no room
-      const { data: urlData } = supabase.storage.from('slides').getPublicUrl(filePath);
+      const { data: urlData } = sb.storage.from('slides').getPublicUrl(filePath);
 
       // Carregar PDF localmente
       const arrayBuffer = await file.arrayBuffer();
@@ -712,7 +712,7 @@
       currentSlide = 1;
 
       // Atualizar no banco
-      await supabase
+      await sb
         .from('rooms')
         .update({
           current_slide: 1,
@@ -774,7 +774,7 @@
     }
 
     async function syncSlide() {
-      await supabase
+      await sb
         .from('rooms')
         .update({ current_slide: currentSlide, updated_at: new Date().toISOString() })
         .eq('id', room.id);
@@ -782,7 +782,7 @@
 
     // ── CONTROLES DA SALA ──
     async function goLive() {
-      await supabase
+      await sb
         .from('rooms')
         .update({ status: 'live', updated_at: new Date().toISOString() })
         .eq('id', room.id);
@@ -796,7 +796,7 @@
     async function endRoom() {
       if (!confirm('Tem certeza que deseja encerrar o webinário?')) return;
 
-      await supabase
+      await sb
         .from('rooms')
         .update({ status: 'ended', updated_at: new Date().toISOString() })
         .eq('id', room.id);
@@ -854,7 +854,7 @@
           audio: false
         });
 
-        await supabase
+        await sb
           .from('rooms')
           .update({ screen_sharing: true, updated_at: new Date().toISOString() })
           .eq('id', room.id);
@@ -871,7 +871,7 @@
         const captureCanvas = document.createElement('canvas');
         const captureCtx = captureCanvas.getContext('2d');
 
-        const broadcastChannel = supabase.channel('screen-' + room.id);
+        const broadcastChannel = sb.channel('screen-' + room.id);
         await broadcastChannel.subscribe();
 
         const captureInterval = setInterval(() => {
@@ -906,7 +906,7 @@
         screenStream = null;
       }
 
-      await supabase
+      await sb
         .from('rooms')
         .update({ screen_sharing: false, updated_at: new Date().toISOString() })
         .eq('id', room.id);
