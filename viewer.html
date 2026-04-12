@@ -413,7 +413,7 @@
     const SUPABASE_URL = 'https://nvnzyupuecyeepxtiltt.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im52bnp5dXB1ZWN5ZWVweHRpbHR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5ODU3MzEsImV4cCI6MjA5MTU2MTczMX0.xsWsvlR1K66kDtJFtzIKzkpZ5sKa-iwDtL4uIInsif4';
 
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
@@ -434,7 +434,7 @@
         return;
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await sb
         .from('rooms')
         .select('*')
         .eq('slug', slug)
@@ -472,7 +472,7 @@
       nickname = document.getElementById('nickname-input').value.trim() || 'Anônimo';
 
       // Registrar participante
-      const { data: p, error } = await supabase
+      const { data: p, error } = await sb
         .from('participants')
         .insert({ room_id: room.id, nickname })
         .select()
@@ -500,7 +500,7 @@
       // Marcar como inativo ao sair
       window.addEventListener('beforeunload', () => {
         if (participant) {
-          supabase
+          sb
             .from('participants')
             .update({ is_active: false })
             .eq('id', participant.id);
@@ -511,7 +511,7 @@
     // ── REALTIME ──
     function setupRealtime() {
       // Escutar mudanças na sala (slides, status, screen sharing)
-      supabase
+      sb
         .channel('room-' + room.id)
         .on('postgres_changes', {
           event: 'UPDATE',
@@ -549,7 +549,7 @@
         .subscribe();
 
       // Escutar frames de screen share via Broadcast
-      supabase
+      sb
         .channel('screen-' + room.id)
         .on('broadcast', { event: 'screen-frame' }, (payload) => {
           const img = document.getElementById('screen-frame');
@@ -563,7 +563,7 @@
       if (room.total_slides === 0) return;
 
       // Buscar PDF do storage
-      const { data: files } = await supabase.storage
+      const { data: files } = await sb.storage
         .from('slides')
         .list(room.id);
 
@@ -572,7 +572,7 @@
       const pdfFile = files.find(f => f.name.endsWith('.pdf'));
       if (!pdfFile) return;
 
-      const { data: urlData } = supabase.storage
+      const { data: urlData } = sb.storage
         .from('slides')
         .getPublicUrl(room.id + '/' + pdfFile.name);
 
@@ -625,7 +625,7 @@
 
       input.value = '';
 
-      await supabase
+      await sb
         .from('chat_messages')
         .insert({
           room_id: room.id,
