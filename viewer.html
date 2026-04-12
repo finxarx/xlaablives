@@ -1,668 +1,195 @@
-<!DOCTYPE html>
+<\!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Xlaablives — Webinário</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    :root {
-      --bg: #0f1117;
-      --surface: #1a1d27;
-      --surface2: #242836;
-      --accent: #6c5ce7;
-      --accent-hover: #7d6ff0;
-      --text: #e8e8ed;
-      --text-muted: #8b8d9a;
-      --success: #00b894;
-      --danger: #e74c3c;
-      --border: #2d3140;
-      --radius: 12px;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-    }
-
-    /* ── TELA DE ENTRADA ── */
-    #join-screen {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      padding: 20px;
-    }
-
-    .join-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 48px;
-      max-width: 440px;
-      width: 100%;
-      text-align: center;
-    }
-
-    .join-card h1 {
-      font-size: 24px;
-      margin-bottom: 4px;
-      background: linear-gradient(135deg, var(--accent), #a29bfe);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .join-card .room-name {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-
-    .join-card .room-status {
-      font-size: 13px;
-      color: var(--text-muted);
-      margin-bottom: 28px;
-    }
-
-    .form-group {
-      margin-bottom: 20px;
-      text-align: left;
-    }
-
-    .form-group label {
-      display: block;
-      font-size: 13px;
-      color: var(--text-muted);
-      margin-bottom: 6px;
-    }
-
-    .form-group input {
-      width: 100%;
-      padding: 12px 16px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      font-size: 15px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
-    .form-group input:focus { border-color: var(--accent); }
-
-    .btn {
-      padding: 12px 24px;
-      border: none;
-      border-radius: 8px;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-
-    .btn-primary {
-      background: var(--accent);
-      color: white;
-      width: 100%;
-    }
-
-    .btn-primary:hover { background: var(--accent-hover); }
-
-    /* ── WEBINÁRIO ── */
-    #webinar-screen {
-      display: none;
-      height: 100vh;
-      flex-direction: column;
-    }
-
-    .top-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 24px;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-
-    .top-bar-left {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .logo {
-      font-size: 18px;
-      font-weight: 700;
-      background: linear-gradient(135deg, var(--accent), #a29bfe);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .room-title {
-      font-size: 15px;
-      color: var(--text-muted);
-    }
-
-    .badge {
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-
-    .badge-waiting { background: var(--surface2); color: var(--text-muted); }
-    .badge-live { background: rgba(0,184,148,0.15); color: var(--success); animation: pulse 2s infinite; }
-    .badge-ended { background: rgba(231,76,60,0.15); color: var(--danger); }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.6; }
-    }
-
-    /* ── MAIN CONTENT ── */
-    .main-content {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-    }
-
-    /* ── SLIDE AREA ── */
-    .slide-area {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--bg);
-      padding: 20px;
-      position: relative;
-      min-height: 0;
-    }
-
-    .slide-container {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--surface);
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      overflow: hidden;
-    }
-
-    .slide-container canvas {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-    }
-
-    .slide-container img {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-    }
-
-    .waiting-message {
-      text-align: center;
-      color: var(--text-muted);
-      padding: 40px;
-    }
-
-    .waiting-message h2 {
-      font-size: 20px;
-      color: var(--text);
-      margin-bottom: 8px;
-    }
-
-    .waiting-message p {
-      font-size: 14px;
-    }
-
-    .ended-message {
-      text-align: center;
-      color: var(--text-muted);
-      padding: 40px;
-    }
-
-    .ended-message h2 {
-      font-size: 20px;
-      color: var(--danger);
-      margin-bottom: 8px;
-    }
-
-    .slide-indicator {
-      position: absolute;
-      bottom: 28px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0,0,0,0.6);
-      padding: 4px 14px;
-      border-radius: 20px;
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-
-    /* ── CHAT BAR (BOTTOM) ── */
-    .chat-bar {
-      display: flex;
-      gap: 8px;
-      padding: 12px 24px;
-      background: var(--surface);
-      border-top: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-
-    .chat-bar input {
-      flex: 1;
-      padding: 10px 16px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      font-size: 14px;
-      outline: none;
-    }
-
-    .chat-bar input:focus { border-color: var(--accent); }
-
-    .chat-bar button {
-      padding: 10px 20px;
-      background: var(--accent);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    .chat-bar button:hover { background: var(--accent-hover); }
-
-    .chat-bar .hint {
-      display: flex;
-      align-items: center;
-      font-size: 12px;
-      color: var(--text-muted);
-      white-space: nowrap;
-    }
-
-    /* ── SCREEN SHARE OVERLAY ── */
-    #screen-share-view {
-      display: none;
-      position: absolute;
-      inset: 0;
-      z-index: 10;
-      background: black;
-    }
-
-    #screen-share-view img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-    }
-
-    /* ── ERROR SCREEN ── */
-    #error-screen {
-      display: none;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      padding: 20px;
-    }
-
-    .error-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 48px;
-      max-width: 440px;
-      width: 100%;
-      text-align: center;
-    }
-
-    .error-card h2 { color: var(--danger); margin-bottom: 12px; }
-    .error-card p { color: var(--text-muted); }
-
-    /* ── RESPONSIVE ── */
-    @media (max-width: 640px) {
-      .top-bar { padding: 10px 16px; }
-      .slide-area { padding: 12px; }
-      .chat-bar { padding: 10px 16px; }
-      .chat-bar .hint { display: none; }
-    }
-
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-  </style>
-</head>
-<body>
-
-  <!-- TELA: ENTRAR NO WEBINÁRIO -->
-  <div id="join-screen">
-    <div class="join-card">
-      <h1>Xlaablives</h1>
-      <div class="room-name" id="join-room-name">Carregando...</div>
-      <div class="room-status" id="join-room-status"></div>
-      <div class="form-group">
-        <label>Seu nome</label>
-        <input type="text" id="nickname-input" placeholder="Como quer ser chamado?">
-      </div>
-      <button class="btn btn-primary" onclick="joinRoom()">Entrar no webinário</button>
-    </div>
-  </div>
-
-  <!-- TELA: WEBINÁRIO -->
-  <div id="webinar-screen">
-    <div class="top-bar">
-      <div class="top-bar-left">
-        <span class="logo">Xlaablives</span>
-        <span class="room-title" id="display-title"></span>
-      </div>
-      <span class="badge badge-waiting" id="status-badge">AGUARDANDO</span>
-    </div>
-
-    <div class="main-content">
-      <div class="slide-area">
-        <div class="slide-container" id="slide-container">
-          <div class="waiting-message" id="waiting-msg">
-            <h2>O webinário começará em breve</h2>
-            <p>Aguarde o apresentador iniciar a transmissão.</p>
-          </div>
-          <canvas id="pdf-canvas" style="display:none"></canvas>
-          <div id="screen-share-view">
-            <img id="screen-frame" src="" alt="Tela compartilhada">
-          </div>
-        </div>
-        <div class="slide-indicator" id="slide-indicator" style="display:none">
-          Slide <span id="slide-current">1</span> de <span id="slide-total">1</span>
-        </div>
-      </div>
-
-      <div class="chat-bar">
-        <input type="text" id="chat-input" placeholder="Envie uma pergunta ao apresentador..." onkeydown="if(event.key==='Enter')sendMessage()">
-        <button onclick="sendMessage()">Enviar</button>
-        <span class="hint">Só o apresentador vê</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- TELA: ERRO -->
-  <div id="error-screen">
-    <div class="error-card">
-      <h2>Webinário não encontrado</h2>
-      <p>Verifique o link e tente novamente.</p>
-    </div>
-  </div>
-
-  <script>
-    // ── CONFIG ──
-    const SUPABASE_URL = 'https://nvnzyupuecyeepxtiltt.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im52bnp5dXB1ZWN5ZWVweHRpbHR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5ODU3MzEsImV4cCI6MjA5MTU2MTczMX0.xsWsvlR1K66kDtJFtzIKzkpZ5sKa-iwDtL4uIInsif4';
-
-    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-    // ── STATE ──
-    let room = null;
-    let participant = null;
-    let pdfDoc = null;
-    let currentSlide = 0;
-    let nickname = '';
-
-    // ── INIT: CARREGAR SALA ──
-    async function init() {
-      const params = new URLSearchParams(window.location.search);
-      const slug = params.get('sala');
-
-      if (!slug) {
-        showError();
-        return;
-      }
-
-      const { data, error } = await sb
-        .from('rooms')
-        .select('*')
-        .eq('slug', slug)
-        .single();
-
-      if (error || !data) {
-        showError();
-        return;
-      }
-
-      room = data;
-      document.getElementById('join-room-name').textContent = room.title;
-
-      const statusLabels = {
-        waiting: 'O apresentador está preparando tudo...',
-        live: 'Ao vivo agora!',
-        ended: 'Este webinário já encerrou.'
-      };
-      document.getElementById('join-room-status').textContent = statusLabels[room.status] || '';
-
-      if (room.status === 'ended') {
-        document.querySelector('#join-screen .btn-primary').textContent = 'Webinário encerrado';
-        document.querySelector('#join-screen .btn-primary').disabled = true;
-        document.querySelector('#join-screen .btn-primary').style.opacity = '0.5';
-      }
-    }
-
-    function showError() {
-      document.getElementById('join-screen').style.display = 'none';
-      document.getElementById('error-screen').style.display = 'flex';
-    }
-
-    // ── ENTRAR NA SALA ──
-    async function joinRoom() {
-      nickname = document.getElementById('nickname-input').value.trim() || 'Anônimo';
-
-      // Registrar participante
-      const { data: p, error } = await sb
-        .from('participants')
-        .insert({ room_id: room.id, nickname })
-        .select()
-        .single();
-
-      if (error) {
-        alert('Erro ao entrar: ' + error.message);
-        return;
-      }
-
-      participant = p;
-      showWebinar();
-    }
-
-    // ── MOSTRAR WEBINÁRIO ──
-    function showWebinar() {
-      document.getElementById('join-screen').style.display = 'none';
-      document.getElementById('webinar-screen').style.display = 'flex';
-      document.getElementById('display-title').textContent = room.title;
-
-      updateStatusBadge();
-      setupRealtime();
-      loadPdf();
-
-      // Marcar como inativo ao sair
-      window.addEventListener('beforeunload', () => {
-        if (participant) {
-          sb
-            .from('participants')
-            .update({ is_active: false })
-            .eq('id', participant.id);
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xlaablives - Assistir WebinÃ¡rio</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/livekit-client@2/dist/livekit-client.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-      });
-    }
 
-    // ── REALTIME ──
-    function setupRealtime() {
-      // Escutar mudanças na sala (slides, status, screen sharing)
-      sb
-        .channel('room-' + room.id)
-        .on('postgres_changes', {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'rooms',
-          filter: 'id=eq.' + room.id
-        }, (payload) => {
-          const updated = payload.new;
-          room = updated;
-          updateStatusBadge();
+        :root {
+            --bg: #0f1117;
+            --surface: #1a1d27;
+            --surface-light: #21262d;
+            --accent: #6c5ce7;
+            --accent-light: #7c6ce7;
+            --text: #e0e0e0;
+            --text-dim: #8b949e;
+            --border: #30363d;
+            --success: #31a24c;
+            --danger: #da3633;
+        }
 
-          // Atualizar slide se mudou
-          if (updated.current_slide !== currentSlide && pdfDoc) {
-            currentSlide = updated.current_slide;
-            renderSlide(currentSlide);
-            updateSlideIndicator();
-          }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow: hidden;
+        }
 
-          // Screen sharing toggle
-          if (updated.screen_sharing) {
-            document.getElementById('screen-share-view').style.display = 'block';
-            document.getElementById('pdf-canvas').style.display = 'none';
-          } else {
-            document.getElementById('screen-share-view').style.display = 'none';
-            if (pdfDoc) {
-              document.getElementById('pdf-canvas').style.display = 'block';
-            }
-          }
+        .join-screen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #0f1117 0%, #1a0033 100%);
+        }
 
-          // Webinário encerrou
-          if (updated.status === 'ended') {
-            showEndedMessage();
-          }
-        })
-        .subscribe();
+        .join-container {
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
 
-      // Escutar frames de screen share via Broadcast
-      sb
-        .channel('screen-' + room.id)
-        .on('broadcast', { event: 'screen-frame' }, (payload) => {
-          const img = document.getElementById('screen-frame');
-          img.src = payload.payload.frame;
-        })
-        .subscribe();
-    }
+        .logo {
+            font-size: 3.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #6c5ce7 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 2rem;
+            letter-spacing: -2px;
+        }
 
-    // ── PDF ──
-    async function loadPdf() {
-      if (room.total_slides === 0) return;
+        .join-title {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: var(--text);
+        }
 
-      // Buscar PDF do storage
-      const { data: files } = await sb.storage
-        .from('slides')
-        .list(room.id);
+        .join-subtitle {
+            color: var(--text-dim);
+            margin-bottom: 3rem;
+            font-size: 1.1rem;
+        }
 
-      if (!files || files.length === 0) return;
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
 
-      const pdfFile = files.find(f => f.name.endsWith('.pdf'));
-      if (!pdfFile) return;
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-dim);
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
 
-      const { data: urlData } = sb.storage
-        .from('slides')
-        .getPublicUrl(room.id + '/' + pdfFile.name);
+        .form-group input {
+            width: 100%;
+            padding: 0.875rem 1.25rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            color: var(--text);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
 
-      try {
-        pdfDoc = await pdfjsLib.getDocument(urlData.publicUrl).promise;
-        currentSlide = room.current_slide;
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: var(--surface-light);
+            box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15);
+        }
 
-        document.getElementById('waiting-msg').style.display = 'none';
-        document.getElementById('pdf-canvas').style.display = 'block';
+        .btn {
+            padding: 0.875rem 2rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
 
-        renderSlide(currentSlide);
-        updateSlideIndicator();
-      } catch (err) {
-        console.error('Erro ao carregar PDF:', err);
-      }
-    }
+        .btn-primary {
+            background: linear-gradient(135deg, #6c5ce7 0%, #a78bfa 100%);
+            color: white;
+            width: 100%;
+        }
 
-    async function renderSlide(num) {
-      if (!pdfDoc || num < 1 || num > pdfDoc.numPages) return;
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(108, 92, 231, 0.4);
+        }
 
-      const page = await pdfDoc.getPage(num);
-      const canvas = document.getElementById('pdf-canvas');
-      const ctx = canvas.getContext('2d');
-      const container = document.getElementById('slide-container');
+        .error-message {
+            padding: 1rem;
+            background: rgba(218, 54, 51, 0.15);
+            border: 1px solid var(--danger);
+            border-radius: 0.5rem;
+            color: var(--danger);
+            text-align: center;
+            margin-bottom: 1rem;
+        }
 
-      const containerWidth = container.clientWidth - 20;
-      const containerHeight = container.clientHeight - 20;
-      const viewport = page.getViewport({ scale: 1 });
-      const scale = Math.min(containerWidth / viewport.width, containerHeight / viewport.height);
-      const scaledViewport = page.getViewport({ scale });
+        .webinar-screen {
+            display: none;
+            flex-direction: column;
+            height: 100vh;
+        }
 
-      canvas.width = scaledViewport.width;
-      canvas.height = scaledViewport.height;
+        .webinar-screen.active {
+            display: flex;
+        }
 
-      await page.render({ canvasContext: ctx, viewport: scaledViewport }).promise;
-    }
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.5rem;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            height: 70px;
+        }
 
-    function updateSlideIndicator() {
-      if (!pdfDoc) return;
-      document.getElementById('slide-indicator').style.display = 'block';
-      document.getElementById('slide-current').textContent = currentSlide;
-      document.getElementById('slide-total').textContent = pdfDoc.numPages;
-    }
+        .top-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
 
-    // ── CHAT ──
-    async function sendMessage() {
-      const input = document.getElementById('chat-input');
-      const message = input.value.trim();
-      if (!message) return;
+        .top-bar-logo {
+            font-size: 1.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #6c5ce7 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
 
-      input.value = '';
+        .room-info {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
 
-      await sb
-        .from('chat_messages')
-        .insert({
-          room_id: room.id,
-          participant_id: participant.id,
-          nickname: nickname,
-          message: message
-        });
-    }
+        .room-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
 
-    // ── STATUS ──
-    function updateStatusBadge() {
-      const badge = document.getElementById('status-badge');
-      badge.className = 'badge badge-' + room.status;
-      const labels = { waiting: 'AGUARDANDO', live: 'AO VIVO', ended: 'ENCERRADO' };
-      badge.textContent = labels[room.status] || room.status;
-    }
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
 
-    function showEndedMessage() {
-      document.getElementById('pdf-canvas').style.display = 'none';
-      document.getElementById('screen-share-view').style.display = 'none';
-      document.getElementById('slide-indicator').style.display = 'none';
-      document.getElementById('slide-container').innerHTML = `
-        <div class="ended-message">
-          <h2>Webinário encerrado</h2>
-          <p>Obrigado por participar!</p>
-        </div>
-      `;
-      document.querySelector('.chat-bar').style.display = 'none';
-    }
-
-    // ── WINDOW RESIZE ──
-    window.addEventListener('resize', () => {
-      if (pdfDoc && currentSlide) renderSlide(currentSlide);
-    });
-
-    // ── START ──
-    init();
-  </script>
-</body>
-</html>
+        .status-badge.waiting {
+            background: rgba(108, 92, 231, 0.2);
+            color: #a78bfa;
+        }
+&6¶w&÷VæC¢&v&Â"Â#3Âã"°¢6öÆ÷#¢6s&f°¢Ð ¢ç7FGW2Ö&FvRæÆfR°¢&6¶w&÷VæC¢&v&CÂc"ÂsbÂã"°¢6öÆ÷#¢33#F3°¢Ð ¢ç7FGW2Ö&FvRæVæFVB°¢&6¶w&÷VæC¢&v&#ÂSBÂSÂã"°¢6öÆ÷#¢6F3c33°¢Ð ¢æÖâÖ6öçFVçB°¢F7Æ¢fÆW°¢fÆW¢°¢v¢ãW&VÓ°¢FFæs¢ãW&VÓ°¢÷fW&fÆ÷s¢FFVã°¢Ð ¢ç6ÆFW2Ö&V°¢fÆW¢°¢F7Æ¢fÆW°¢fÆWÖF&V7Föã¢6öÇVÖã°¢v¢&VÓ°¢&6¶w&÷VæC¢f"Ò×7W&f6R°¢&÷&FW#¢6öÆBf"ÒÖ&÷&FW"°¢&÷&FW"×&FW3¢ãsW&VÓ°¢FFæs¢ãW&VÓ°¢÷6Föã¢&VÆFfS°¢Ð ¢ç6ÆFW2Ö6öçFæW"°¢fÆW¢°¢F7Æ¢fÆW°¢ÆvâÖFV×3¢6VçFW#°¢§W7FgÖ6öçFVçC¢6VçFW#°¢&6¶w&÷VæC¢f"Ò×7W&f6RÖÆvB°¢&÷&FW"×&FW3¢ãW&VÓ°¢÷fW&fÆ÷s¢FFVã°¢Ð ¢7Fd6çf2°¢Ö×vGF¢S°¢ÖÖVvC¢S°¢ö&¦V7BÖfC¢6öçFã°¢Ð ¢çvFærÖÖW76vR°¢FWBÖÆvã¢6VçFW#°¢6öÆ÷#¢f"Ò×FWBÖFÒ°¢föçB×6¦S¢ã&VÓ°¢Ð ¢ç6ÆFRÖæF6F÷"°¢FFæs¢ãsW&VÒ&VÓ°¢&6¶w&÷VæC¢f"Ò×7W&f6RÖÆvB°¢&÷&FW"×&FW3¢ãG&VÓ°¢6öÆ÷#¢f"Ò×FWBÖFÒ°¢föçB×6¦S¢ã&VÓ°¢FWBÖÆvã¢6VçFW#°¢Ð ¢çfFVò×&WfWr°¢÷6Föã¢'6öÇWFS°¢F÷¢ãW&VÓ°¢&vC¢ãW&VÓ°¢vGF¢#C°¢VvC¢°¢&6¶w&÷VæC¢f"Ò×7W&f6RÖÆvB°¢&÷&FW#¢'6öÆBf"ÒÖ&÷&FW"°¢&÷&FW"×&FW3¢ãsW&VÓ°¢÷fW&fÆ÷s¢FFVã°¢&÷×6F÷s¢3&v&ÂÂÂãR°¢Ð ¢7&VÖ÷FUfFVò°¢vGF¢S°¢VvC¢S°¢ö&¦V7BÖfC¢6÷fW#°¢Ð ¢æ6BÖ&V°¢vGF¢3c°¢F7Æ¢fÆW°¢fÆWÖF&V7Föã¢6öÇVÖã°¢&6¶w&÷VæC¢f"Ò×7W&f6R°¢&÷&FW#¢6öÆBf"ÒÖ&÷&FW"°¢&÷&FW"×&FW3¢ãsW&VÓ°¢÷fW&fÆ÷s¢FFVã°¢Ð ¢æ6BÖVFW"°¢FFæs¢&VÓ°¢&÷&FW"Ö&÷GFöÓ¢6öÆBf"ÒÖ&÷&FW"°¢föçB×vVvC¢c°¢6öÆ÷#¢f"Ò×FWB°¢Ð ¢æ6BÖÖW76vW2°¢fÆW¢°¢÷fW&fÆ÷r×¢WFó°¢FFæs¢&VÓ°¢F7Æ¢fÆW°¢fÆWÖF&V7Föã¢6öÇVÖã°¢v¢ãsW&VÓ°¢Ð ¢æ6BÖÖW76vR°¢FFæs¢ãsW&VÓ°¢&6¶w&÷VæC¢f"Ò×7W&f6RÖÆvB°¢&÷&FW"×&FW3¢ãW&VÓ°¢&÷&FW"ÖÆVgC¢'6öÆBf"ÒÖ66VçB°¢Ð ¢æ6BÖæ6¶æÖR°¢6öÆ÷#¢f"ÒÖ66VçB°¢föçB×vVvC¢c°¢föçB×6¦S¢ãW&VÓ°¢Ö&vâÖ&÷GFöÓ¢ã#W&VÓ°¢Ð ¢æ6B×FWB°¢6öÆ÷#¢f"Ò×FWB°¢föçB×6¦S¢ã&VÓ°¢v÷&BÖ'&V³¢'&V²×v÷&C°¢Ð ¢æ6BÖçWBÖ&V°¢FFæs¢&VÓ°¢&÷&FW"×F÷¢6öÆBf"ÒÖ&÷&FW"°¢Ð ¢æ6BÖçWBÖçB°¢föçB×6¦S¢ãsW&VÓ°¢6öÆ÷#¢f"Ò×FWBÖFÒ°¢Ö&vâÖ&÷GFöÓ¢ãW&VÓ°¢Ð ¢æ6BÖçWBÖ&÷°¢F7Æ¢fÆW°¢v¢ãW&VÓ°¢Ð ¢æ6BÖçWB°¢fÆW¢°¢FFæs¢ãW&VÒãsW&VÓ°¢&6¶w&÷VæC¢f"Ò×7W&f6RÖÆvB°¢&÷&FW#¢6öÆBf"ÒÖ&÷&FW"°¢&÷&FW"×&FW3¢ãG&VÓ°¢6öÆ÷#¢f"Ò×FWB°¢föçB×6¦S¢ã&VÓ°¢G&ç6Föã¢ÆÂã'2V6S°¢Ð ¢æ6BÖçWC¦fö7W2°¢÷WFÆæS¢æöæS°¢&÷&FW"Ö6öÆ÷#¢f"ÒÖ66VçB°¢Ð ¢æ'Fâ×6VæB°¢FFæs¢ãW&VÒ&VÓ°¢&6¶w&÷VæC¢f"ÒÖ66VçB°¢6öÆ÷#¢vFS°¢&÷&FW#¢æöæS°¢&÷&FW"×&FW3¢ãG&VÓ°¢7W'6÷#¢öçFW#°¢föçB×vVvC¢c°¢G&ç6Föã¢ÆÂã'2V6S°¢Ð ¢æ'Fâ×6VæC¦÷fW"°¢&6¶w&÷VæC¢f"ÒÖ66VçBÖÆvB°¢Ð ¢æ'Fâ×6VæC¦F6&ÆVB°¢÷6G¢ãS°¢7W'6÷#¢æ÷BÖÆÆ÷vVC°¢Ð ¢æV×GÖ6B°¢F7Æ¢fÆW°¢ÆvâÖFV×3¢6VçFW#°¢§W7FgÖ6öçFVçC¢6VçFW#°¢VvC¢S°¢6öÆ÷#¢f"Ò×FWBÖFÒ°¢FWBÖÆvã¢6VçFW#°¢FFæs¢'&VÓ°¢Ð ¢£¢×vV&¶B×67&öÆÆ&"°¢vGF¢°¢Ð ¢£¢×vV&¶B×67&öÆÆ&"×G&6²°¢&6¶w&÷VæC¢G&ç7&VçC°¢Ð ¢£¢×vV&¶B×67&öÆÆ&"×FVÖ"°¢&6¶w&÷VæC¢f"ÒÖ&÷&FW"°¢&÷&FW"×&FW3¢G°¢Ð ¢£¢×vV&¶B×67&öÆÆ&"×FVÖ#¦÷fW"°¢&6¶w&÷VæC¢f"Ò×FWBÖFÒ°¢Ð ¢æVæFVBÖ÷fW&Æ°¢F7Æ¢æöæS°¢÷6Föã¢'6öÇWFS°¢F÷¢°¢ÆVgC¢°¢&vC¢°¢&÷GFöÓ¢°¢&6¶w&÷VæC¢&v&ÂÂÂã°¢&6¶G&÷ÖfÇFW#¢&ÇW"G°¢¢ÖæFW¢°¢ÆvâÖFV×3¢6VçFW#°¢§W7FgÖ6öçFVçC¢6VçFW#°¢&÷&FW"×&FW3¢ãW&VÓ°¢Ð ¢æVæFVBÖ÷fW&Ææ7FfR°¢F7Æ¢fÆW°¢Ð ¢æVæFVBÖÖW76vR°¢&6¶w&÷VæC¢f"Ò×7W&f6R°¢&÷&FW#¢6öÆBf"ÒÖ&÷&FW"°¢&÷&FW"×&FW3¢ãsW&VÓ°¢FFæs¢'&VÓ°¢FWBÖÆvã¢6VçFW#°¢Ö×vGF¢C°¢Ð ¢æVæFVBÖÖW76vR"°¢föçB×6¦S¢ãW&VÓ°¢Ö&vâÖ&÷GFöÓ¢&VÓ°¢6öÆ÷#¢f"Ò×FWB°¢Ð ¢æVæFVBÖÖW76vR°¢6öÆ÷#¢f"Ò×FWBÖFÒ°¢Ð ¢æÆfV¶BÖæ÷F6R°¢FFæs¢ãsW&VÓ°¢&6¶w&÷VæC¢&v&#SRÂ2ÂrÂãR°¢&÷&FW#¢6öÆB&v&#SRÂ2ÂrÂãR°¢&÷&FW"×&FW3¢ãG&VÓ°¢6öÆ÷#¢6ff3s°¢föçB×6¦S¢ãsW&VÓ°¢Ð¢Â÷7GÆSà£ÂöVCà£Æ&öGà¢ÆFb6Æ73Ò&¦öâ×67&VVâ7FfR"CÒ&¦öå67&VVâ#à¢ÆFb6Æ73Ò&¦öâÖ6öçFæW"#à¢ÆFb6Æ73Ò&Æövò#åÆ&ÆfW3ÂöFcà¢Æ6Æ73Ò&¦öâ×FFÆR"CÒ&¦öåFFÆR#äVçG&"æòvV&ì:&óÂöà¢Ç6Æ73Ò&¦öâ×7V'FFÆR"CÒ&¦öå7V'FFÆR#äFvFR6WRæöÖR&'F6#Â÷à ¢ÆFbCÒ&W'&÷$ÖW76vR"6Æ73Ò&W'&÷"ÖÖW76vR"7GÆSÒ&F7Æ¢æöæS²#ãÂöFcà ¢Æf÷&ÒCÒ&¦öäf÷&Ò#à¢ÆFb6Æ73Ò&f÷&ÒÖw&÷W#à¢ÆÆ&VÂf÷#Ò&æ6¶æÖTçWB#å6WRæöÖSÂöÆ&VÃà¢ÆçWBGSÒ'FWB"CÒ&æ6¶æÖTçWB"Æ6VöÆFW#Ò$FvFR6WRæöÖR"&WV&VCà¢ÂöFcà¢Æ'WGFöâGSÒ'7V&ÖB"6Æ73Ò&'Fâ'Fâ×&Ö'#äVçG&"æòvV&ì:&óÂö'WGFöãà¢Âöf÷&Óà¢ÂöFcà¢ÂöFcà ¢ÆFb6Æ73Ò'vV&æ"×67&VVâ"CÒ'vV&æ%67&VVâ#à¢ÆFb6Æ73Ò'F÷Ö&"#à¢ÆFb6Æ73Ò'F÷Ö&"ÖÆVgB#à¢ÆFb6Æ73Ò'F÷Ö&"ÖÆövò#åÆ&ÆfW3ÂöFcà¢ÆFb6Æ73Ò'&ööÒÖæfò#à¢ÆFb6Æ73Ò'&ööÒ×FFÆR"CÒ'F÷&%FFÆR#ä6'&VvæFòââãÂöFcà¢ÆFb6Æ73Ò'7FGW2Ö&FvRvFær"CÒ'7FGW4&FvR#äwV&FæFóÂöFcà¢ÂöFcà¢ÂöFcà¢ÂöFcà ¢ÆFb6Æ73Ò&ÖâÖ6öçFVçB#à¢ÆFb6Æ73Ò'6ÆFW2Ö&V#à¢ÆFb6Æ73Ò'6ÆFW2Ö6öçFæW"#à¢Æ6çf2CÒ'Fd6çf2"7GÆSÒ&F7Æ¢æöæS²#ãÂö6çf3à¢ÆFbCÒ'vFæuÆ6VöÆFW""6Æ73Ò'vFærÖÖW76vR#äòvV&ì:&ò6öÖ\:v,:VÒ'&WfSÂöFcà¢ÆFbCÒ&VæFVD÷fW&Æ"6Æ73Ò&VæFVBÖ÷fW&Æ#à¢ÆFb6Æ73Ò&VæFVBÖÖW76vR#à¢Æ#åvV&ì:&òVæ6W'&FóÂö#à¢Çäö'&vFò÷"'F6%ÂÂ÷à¢ÂöFcà¢ÂöFcà¢ÂöFcà¢ÆFb6Æ73Ò'6ÆFRÖæF6F÷""CÒ'6ÆFTæF6F÷"#å6ÆFRÒòÓÂöFcà¢ÆFbCÒ&ÆfT¶Dæ÷F6R"6Æ73Ò&ÆfV¶BÖæ÷F6R"7GÆSÒ&F7Æ¢æöæS²#à¢)ªûòÆfT¶Bì:6ò6öæfwW&Fòâl:ÖFVòFò&W6VçFF÷"ì:6ò6W,:W&Fòà¢ÂöFcà¢ÆFb6Æ73Ò'fFVò×&WfWr"CÒ'fFVõ&WfWr"7GÆSÒ&F7Æ¢æöæS²#à¢ÇfFVòCÒ'&VÖ÷FUfFVò"WF÷ÆÆ6æÆæSãÂ÷fFVóà¢ÂöFcà¢ÂöFcà ¢ÆFb6Æ73Ò&6BÖ&V#à¢ÆFb6Æ73Ò&6BÖVFW"#ä6CÂöFcà¢ÆFb6Æ73Ò&6BÖÖW76vW2"CÒ&6DÖW76vW2#à¢ÆFb6Æ73Ò&V×GÖ6B#äVçfRVÖÖVç6vVÒ&6öÖ\:v"6öçfW'6#ÂöFcà¢ÂöFcà¢ÆFb6Æ73Ò&6BÖçWBÖ&V#à¢ÆFb6Æ73Ò&6BÖçWBÖçB#å<;2ò&W6VçFF÷"l:£ÂöFcà¢ÆFb6Æ73Ò&6BÖçWBÖ&÷#à¢ÆçWBGSÒ'FWB"6Æ73Ò&6BÖçWB"CÒ&6DçWB"Æ6VöÆFW#Ò%7VÖVç6vVÒâââ#à¢Æ'WGFöâ6Æ73Ò&'Fâ×6VæB"CÒ'6VæD'Fâ#äVçf#Âö'WGFöãà¢ÂöFcà¢ÂöFcà¢ÂöFcà¢ÂöFcà¢ÂöFcà ¢Ç67&Cà¢6öç7B5U$4UõU$ÂÒvGG3¢òöçfç§WVV7VWFÇGBç7W&6Ræ6òs°¢6öç7B5U$4Uôäôåô´UÒvW¦$v6ö¤W¤æ4å#V44d·d4£æW§34Öö§¦E&Ôg¥¥44ä¦Å¦dÓS&&çVE#¥tãU¥ugvT'$#v6Ó5¥4dÔgV##FÄ4§ö¤S4ç¥STôES4×¤W4ÕcF44dÖ¤TÕES$ÕF7¤Õç5w7fÅ#³cf´GD¤gG¤·¦·£W4¶ÖtGDÃGTç6cBs°¢ÆWBÄdT´EõU$ÂÒrs°¢Ff§4Æ"ävÆö&Åv÷&¶W$÷Föç2çv÷&¶W%7&2ÒvGG3¢òö6Fæ§2æ6Æ÷VFfÆ&Ræ6öÒö¦öÆ'2÷Fbæ§2ó2ããsB÷Fbçv÷&¶W"æÖâæ§2s° ¢ÆWB&ööÒÒçVÆÃ°¢ÆWB'F6çBÒçVÆÃ°¢ÆWB7W'&VçEFdFö2ÒçVÆÃ°¢ÆWB7W'&VçEvRÒ°¢ÆWB6"ÒçVÆÃ°¢ÆWB&ööÔ6ææVÂÒçVÆÃ°¢ÆWBÆfT¶E&ööÒÒçVÆÃ°¢ÆWB&VÖ÷FUG&6·2Ò·Ó° ¢gVæ7FöâæE7W&6R°¢6"ÒvæF÷rç7W&6Ræ7&VFT6ÆVçB5U$4UõU$ÂÂ5U$4Uôäôåô´U°¢Ð ¢gVæ7FöâvWE&ööÕ6ÇVtg&öÕW&Â°¢6öç7B&×2ÒæWrU$Å6V&6&×2væF÷ræÆö6Föâç6V&6°¢&WGW&â&×2ævWBw6Ær°¢Ð ¢7æ2gVæ7FöâÆöE&ööÒ°¢G'°¢6öç7B6ÇVrÒvWE&ööÕ6ÇVtg&öÕW&Â°¢b6ÇVr°¢6÷tW'&÷"uvV&ì:&òì:6òVæ6öçG&FòâU$Âçl:ÆFâr°¢&WGW&ã°¢Ð ¢6öç7B²FFÂW'&÷"ÒÒvB6"æg&öÒw&öö×2rç6VÆV7Br¢ræWw6ÇVrrÂ6ÇVrç6ævÆR°¢bW'&÷"ÇÂFF°¢6÷tW'&÷"uvV&ì:&òì:6òVæ6öçG&Fò÷RföVæ6W'&Fòâr°¢&WGW&ã°¢Ð ¢&ööÒÒFF°¢Fö7VÖVçBævWDVÆVÖVçD'Bv¦öåFFÆRrçFWD6öçFVçBÒ&ööÒçFFÆS°¢Fö7VÖVçBævWDVÆVÖVçD'Bv¦öå7V'FFÆRrçFWD6öçFVçBÒtFvFR6WRæöÖR&767F"s°¢Ò6F6W'&÷"°¢6÷tW'&÷"tW'&òò6'&Vv"vV&ì:&ó¢r²W'&÷"æÖW76vR°¢Ð¢Ð ¢gVæ7Föâ6÷tW'&÷"ÖW76vR°¢6öç7BW'&÷$FbÒFö7VÖVçBævWDVÆVÖVçD'BvW'&÷$ÖW76vRr°¢W'&÷$FbçFWD6öçFVçBÒÖW76vS°¢W'&÷$Fbç7GÆRæF7ÆÒv&Æö6²s°¢Ð ¢7æ2gVæ7Föâ¦öåvV&æ"æ6¶æÖR°¢G'°¢6öç7B²FFÂW'&÷"ÒÒvB6"æg&öÒw'F6çG2ræç6W'B·°¢&ööÕöC¢&ööÒæBÀ¢æ6¶æÖRÀ¢5ö7FfS¢G'VP¢ÕÒç6VÆV7Bç6ævÆR° ¢bW'&÷"F&÷rW'&÷#°¢'F6çBÒFF°¢6÷uvV&æ%67&VVâ°¢6WGW&VÇFÖTÆ7FVæW'2°¢6öææV7EFôÆfT¶B°¢Ò6F6W'&÷"°¢6÷tW'&÷"tW'&òòVçG&"æòvV&ì:&ó¢r²W'&÷"æÖW76vR°¢Ð¢Ð ¢gVæ7Föâ6÷uvV&æ%67&VVâ°¢Fö7VÖVçBævWDVÆVÖVçD'Bv¦öå67&VVâræ6Æ74Æ7Bç&VÖ÷fRv7FfRr°¢Fö7VÖVçBævWDVÆVÖVçD'BwvV&æ%67&VVâræ6Æ74Æ7BæFBv7FfRr°¢Fö7VÖVçBævWDVÆVÖVçD'BwF÷&%FFÆRrçFWD6öçFVçBÒ&ööÒçFFÆS°¢WFFU7FGW4&FvR°¢ÆöE6ÆFW2°¢Ð ¢gVæ7FöâWFFU7FGW4&FvR°¢6öç7B&FvRÒFö7VÖVçBævWDVÆVÖVçD'Bw7FGW4&FvRr°¢&FvRæ6Æ74æÖRÒw7FGW2Ö&FvRr²&ööÒç7FGW3°¢6öç7BÆ&VÇ2Ò²wvFærs¢twV&FæFòrÂvÆfRs¢tòffòrÂvVæFVBs¢tVæ6W'&FòrÓ°¢&FvRçFWD6öçFVçBÒÆ&VÇ5·&ööÒç7FGW5ÒÇÂ&ööÒç7FGW3° ¢b&ööÒç7FGW2ÓÓÒvVæFVBr°¢Fö7VÖVçBævWDVÆVÖVçD'BvVæFVD÷fW&Æræ6Æ74Æ7BæFBv7FfRr°¢Fö7VÖVçBævWDVÆVÖVçD'Bv6DçWBræF6&ÆVBÒG'VS°¢Fö7VÖVçBævWDVÆVÖVçD'Bw6VæD'FâræF6&ÆVBÒG'VS°¢ÒVÇ6R°¢Fö7VÖVçBævWDVÆVÖVçD'BvVæFVD÷fW&Æræ6Æ74Æ7Bç&VÖ÷fRv7FfRr°¢Fö7VÖVçBævWDVÆVÖVçD'Bv6DçWBræF6&ÆVBÒfÇ6S°¢Fö7VÖVçBævWDVÆVÖVçD'Bw6VæD'FâræF6&ÆVBÒfÇ6S°¢Ð¢Ð ¢7æ2gVæ7FöâÆöE6ÆFW2°¢G'°¢b&ööÒçF÷FÅ÷6ÆFW2â°¢6öç7BFeW&ÂÒGµ5U$4UõU$ÇÒ÷7F÷&vR÷cöö&¦V7B÷V&Æ2÷6ÆFW2òG·&ööÒæGÒòG¶vBvWDÆ7EFdfÆVæÖRÖ°¢6öç7BFbÒvBFf§4Æ"ævWDFö7VÖVçBFeW&Âç&öÖ6S°¢7W'&VçEFdFö2ÒFc°¢7W'&VçEvRÒ&ööÒæ7W'&VçE÷6ÆFRÇÂ°¢&VæFW%6ÆFR°¢Fö7VÖVçBævWDVÆVÖVçD'BwvFæuÆ6VöÆFW"rç7GÆRæF7ÆÒvæöæRs°¢Ð¢Ò6F6W'&÷"°¢6öç6öÆRæW'&÷"tW'&òò6'&Vv"6ÆFW3¢rÂW'&÷"°¢Ð¢Ð ¢7æ2gVæ7FöâvWDÆ7EFdfÆVæÖR°¢6öç7B²FFÒÒvB6"ç7F÷&vRæg&öÒw6ÆFW2ræÆ7B&ööÒæB°¢bFFbbFFæÆVæwFâ°¢&WGW&âFF¶FFæÆVæwFÒÒææÖS°¢Ð¢&WGW&ârs°¢Ð ¢7æ2gVæ7Föâ&VæFW%6ÆFR°¢b7W'&VçEFdFö2ÇÂ7W'&VçEvRÂÇÂ7W'&VçEvRâ7W'&VçEFdFö2æçVÕvW2&WGW&ã°¢G'°¢6öç7BvRÒvB7W'&VçEFdFö2ævWEvR7W'&VçEvR°¢6öç7B6çf2ÒFö7VÖVçBævWDVÆVÖVçD'BwFd6çf2r°¢6öç7B7GÒ6çf2ævWD6öçFWBs&Br°¢6öç7BfWw÷'BÒvRævWEfWw÷'B²66ÆS¢"Ò°¢6çf2çvGFÒfWw÷'BçvGF°¢6çf2æVvBÒfWw÷'BæVvC°¢vBvRç&VæFW"²6çf46öçFWC¢7GÂfWw÷'BÒç&öÖ6S°¢6çf2ç7GÆRæF7ÆÒv&Æö6²s°¢Fö7VÖVçBævWDVÆVÖVçD'Bw6ÆFTæF6F÷"rçFWD6öçFVçBÒ6ÆFRG¶7W'&VçEvWÒFRG¶7W'&VçEFdFö2æçVÕvW7Ö°¢Ò6F6W'&÷"°¢6öç6öÆRæW'&÷"tW'&òò&VæFW&¦"6ÆFS¢rÂW'&÷"°¢Ð¢Ð ¢gVæ7Föâ6WGW&VÇFÖTÆ7FVæW'2°¢&ööÔ6ææVÂÒ6"æ6ææVÂw&ööÒÒr²&ööÒæB°¢&ööÔ6ææVÂæöâw÷7Fw&W5ö6ævW2rÂ²WfVçC¢uUDDRrÂ66VÖ¢wV&Æ2rÂF&ÆS¢w&öö×2rÒÂÆöBÓâ°¢&ööÒÒÆöBææWs°¢WFFU7FGW4&FvR°¢bÆöBææWræ7W'&VçE÷6ÆFRbb7W'&VçEvRÓÒÆöBææWræ7W'&VçE÷6ÆFR°¢7W'&VçEvRÒÆöBææWræ7W'&VçE÷6ÆFS°¢&VæFW%6ÆFR°¢Ð¢bÆöBææWrç67&VVå÷6&ærbbÆöBææWrç67&VVå÷6&ærÓÒ&ööÒç67&VVå÷6&ær°¢ÆöE6ÆFW2°¢Ð¢Òç7V'67&&R° ¢6"æ6ææVÂv6BÒr²&ööÒæBæöâw÷7Fw&W5ö6ævW2rÂ²WfVçC¢tå4U%BrÂ66VÖ¢wV&Æ2rÂF&ÆS¢v6EöÖW76vW2rÒÂÆöBÓâ°¢bÆöBææWrç&ööÕöBÓÓÒ&ööÒæB°¢FD6DÖW76vRÆöBææWr°¢Ð¢Òç7V'67&&R°¢Ð ¢gVæ7FöâFD6DÖW76vR×6r°¢6öç7B6öçFæW"ÒFö7VÖVçBævWDVÆVÖVçD'Bv6DÖW76vW2r°¢b6öçFæW"çVW'6VÆV7F÷"ræV×GÖ6Br°¢6öçFæW"æææW$DÔÂÒrs°¢Ð¢6öç7BFbÒFö7VÖVçBæ7&VFTVÆVÖVçBvFbr°¢Fbæ6Æ74æÖRÒv6BÖÖW76vRs°¢FbæææW$DÔÂÒÆFb6Æ73Ò&6BÖæ6¶æÖR#âG¶W66TFÖÂ×6rææ6¶æÖRÓÂöFcãÆFb6Æ73Ò&6B×FWB#âG¶W66TFÖÂ×6ræÖW76vRÓÂöFcæ°¢6öçFæW"æVæD6ÆBFb°¢6öçFæW"ç67&öÆÅF÷Ò6öçFæW"ç67&öÆÄVvC°¢Ð ¢7æ2gVæ7Föâ6VæD6DÖW76vR°¢6öç7BçWBÒFö7VÖVçBævWDVÆVÖVçD'Bv6DçWBr°¢6öç7BÖW76vRÒçWBçfÇVRçG&Ò°¢bÖW76vR&WGW&ã° ¢G'°¢vB6"æg&öÒv6EöÖW76vW2ræç6W'B·°¢&ööÕöC¢&ööÒæBÀ¢'F6çEöC¢'F6çBæBÀ¢æ6¶æÖS¢'F6çBææ6¶æÖRÀ¢ÖW76vP¢ÕÒ°¢çWBçfÇVRÒrs°¢Ò6F6W'&÷"°¢6öç6öÆRæW'&÷"tW'&òòVçf"ÖVç6vVÓ¢rÂW'&÷"°¢Ð¢Ð ¢gVæ7FöâW66TFÖÂFWB°¢6öç7BFbÒFö7VÖVçBæ7&VFTVÆVÖVçBvFbr°¢FbçFWD6öçFVçBÒFWC°¢&WGW&âFbæææW$DÔÃ°¢Ð ¢7æ2gVæ7Föâ6öææV7EFôÆfT¶B°¢bÄdT´EõU$Â°¢6öç6öÆRçv&âtÆfT¶BU$Âæ÷B6öæfwW&VBr°¢Fö7VÖVçBævWDVÆVÖVçD'BvÆfT¶Dæ÷F6Rrç7GÆRæF7ÆÒv&Æö6²s°¢&WGW&ã°¢Ð ¢G'°¢6öç7B&W7öç6RÒvBfWF65U$4UõU$Â²rögVæ7Föç2÷cöÆfV¶B×Fö¶VârÂ°¢ÖWFöC¢uõ5BrÀ¢VFW'3¢²t6öçFVçBÕGRs¢vÆ6Föâö§6öârÒÀ¢&öG¢¥4ôâç7G&ævg²&ööÔæÖS¢&ööÒæBÂ'F6çDæÖS¢'F6çBææ6¶æÖRÂ5&W6VçFW#¢fÇ6RÒ¢Ò°¢6öç7B²Fö¶VâÂW'&÷"ÒÒvB&W7öç6Ræ§6öâ°¢bW'&÷"F&÷ræWrW'&÷"W'&÷"° ¢6öç7B²ÆfV¶D6ÆVçBÒÒvæF÷s°¢ÆfT¶E&ööÒÒæWrÆfV¶D6ÆVçBå&ööÒ° ¢ÆfT¶E&ööÒæöâÆfV¶D6ÆVçBå&ööÔWfVçBåG&6µ7V'67&&VBÂG&6²ÂV&Æ6FöâÂ'F6çBÓâ°¢bG&6²æ¶æBÓÓÒwfFVòr°¢6öç7BfFVòÒFö7VÖVçBævWDVÆVÖVçD'Bw&VÖ÷FUfFVòr°¢fFVòç7&4ö&¦V7BÒæWrÖVF7G&VÒ·G&6²æÖVF7G&VÕG&6µÒ°¢Fö7VÖVçBævWDVÆVÖVçD'BwfFVõ&WfWrrç7GÆRæF7ÆÒv&Æö6²s°¢ÒVÇ6RbG&6²æ¶æBÓÓÒvVFòr°¢6öç7BVFòÒæWrVFò°¢VFòç7&4ö&¦V7BÒæWrÖVF7G&VÒ·G&6²æÖVF7G&VÕG&6µÒ°¢VFòæWF÷ÆÒG'VS°¢Ð¢Ò° ¢vBÆfT¶E&ööÒæ6öææV7BÄdT´EõU$ÂÂFö¶Vâ°¢Ò6F6W'&÷"°¢6öç6öÆRæW'&÷"tÆfT¶B6öææV7FöâfÆVC¢rÂW'&÷"°¢Fö7VÖVçBævWDVÆVÖVçD'BvÆfT¶Dæ÷F6Rrç7GÆRæF7ÆÒv&Æö6²s°¢Ð¢Ð ¢væF÷ræFDWfVçDÆ7FVæW"v&Vf÷&WVæÆöBrÂ7æ2Óâ°¢b'F6çB°¢vB6"æg&öÒw'F6çG2rçWFFR²5ö7FfS¢fÇ6RÒæWvBrÂ'F6çBæB°¢Ð¢Ò° ¢Fö7VÖVçBævWDVÆVÖVçD'Bv¦öäf÷&ÒræFDWfVçDÆ7FVæW"w7V&ÖBrÂRÓâ°¢Rç&WfVçDFVfVÇB°¢6öç7Bæ6¶æÖRÒFö7VÖVçBævWDVÆVÖVçD'Bvæ6¶æÖTçWBrçfÇVRçG&Ò°¢bæ6¶æÖRbb&ööÒ°¢¦öåvV&æ"æ6¶æÖR°¢Ð¢Ò° ¢Fö7VÖVçBævWDVÆVÖVçD'Bw6VæD'FâræFDWfVçDÆ7FVæW"v6Æ6²rÂ6VæD6DÖW76vR°¢Fö7VÖVçBævWDVÆVÖVçD'Bv6DçWBræFDWfVçDÆ7FVæW"v¶W&W72rÂRÓâ°¢bRæ¶WÓÓÒtVçFW"r°¢6VæD6DÖW76vR°¢Ð¢Ò° ¢æE7W&6R°¢ÆöE&ööÒ°¢Â÷67&Cà£Âö&öGà£ÂöFÖÃà 
