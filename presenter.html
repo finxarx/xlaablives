@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Xlaablives — Painel do Apresentador</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #242836;
+      --accent: #6c5ce7;
+      --accent-hover: #7d6ff0;
+      --text: #e8e8ed;
+      --text-muted: #8b8d9a;
+      --success: #00b894;
+      --danger: #e74c3c;
+      --warning: #fdcb6e;
+      --border: #2d3140;
+      --radius: 12px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── TELA DE CRIAÇÃO ── */
+    #create-screen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .create-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 48px;
+      max-width: 480px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .create-card h1 {
+      font-size: 28px;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, var(--accent), #a29bfe);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .create-card p {
+      color: var(--text-muted);
+      margin-bottom: 32px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus {
+      border-color: var(--accent);
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .btn-primary:hover { background: var(--accent-hover); }
+
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .btn-outline:hover {
+      background: var(--surface2);
+    }
+
+    .btn-sm {
+      padding: 8px 16px;
+      font-size: 13px;
+    }
+
+    /* ── DASHBOARD ── */
+    #dashboard {
+      display: none;
+      height: 100vh;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 24px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .top-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo {
+      font-size: 18px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent), #a29bfe);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .room-title {
+      font-size: 15px;
+      color: var(--text-muted);
+    }
+
+    .top-bar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .badge-waiting { background: var(--surface2); color: var(--text-muted); }
+    .badge-live { background: rgba(0,184,148,0.15); color: var(--success); animation: pulse 2s infinite; }
+    .badge-ended { background: rgba(231,76,60,0.15); color: var(--danger); }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    .viewers-count {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .viewers-count .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+
+    /* ── MAIN LAYOUT ── */
+    .main-content {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      height: calc(100vh - 57px);
+    }
+
+    /* ── SLIDE AREA ── */
+    .slide-area {
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+      padding: 20px;
+    }
+
+    .slide-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      position: relative;
+      min-height: 0;
+    }
+
+    .slide-container canvas {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .upload-zone {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: var(--text-muted);
+      padding: 40px;
+      cursor: pointer;
+    }
+
+    .upload-zone svg {
+      width: 48px;
+      height: 48px;
+      opacity: 0.5;
+    }
+
+    .upload-zone:hover {
+      color: var(--text);
+    }
+
+    .upload-zone:hover svg { opacity: 0.8; }
+
+    .slide-controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 16px 0 0;
+    }
+
+    .slide-nav {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .slide-nav button {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      transition: all 0.2s;
+    }
+
+    .slide-nav button:hover { background: var(--surface2); }
+    .slide-nav button:disabled { opacity: 0.3; cursor: default; }
+
+    .slide-info {
+      font-size: 14px;
+      color: var(--text-muted);
+      min-width: 80px;
+      text-align: center;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+      margin-left: auto;
+    }
+
+    /* ── SIDEBAR (CHAT) ── */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+    }
+
+    .sidebar-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .chat-msg {
+      background: var(--surface2);
+      border-radius: 8px;
+      padding: 10px 14px;
+    }
+
+    .chat-msg-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .chat-msg-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .chat-msg-time {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .chat-msg-text {
+      font-size: 14px;
+      line-height: 1.4;
+      color: var(--text);
+    }
+
+    .chat-empty {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    /* ── SHARE MODAL ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      max-width: 500px;
+      width: 90%;
+    }
+
+    .modal h2 {
+      margin-bottom: 16px;
+      font-size: 20px;
+    }
+
+    .share-link-box {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .share-link-box input {
+      flex: 1;
+      padding: 10px 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+    }
+
+    .copy-feedback {
+      font-size: 13px;
+      color: var(--success);
+      display: none;
+    }
+
+    /* ── SCREEN SHARE INDICATOR ── */
+    .screen-share-bar {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 8px;
+      background: rgba(108, 92, 231, 0.15);
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .screen-share-bar.active { display: flex; }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+  <!-- TELA 1: CRIAR WEBINÁRIO -->
+  <div id="create-screen">
+    <div class="create-card">
+      <h1>Xlaablives</h1>
+      <p>Crie seu webinário protegido em segundos</p>
+      <div class="form-group">
+        <label>Título do webinário</label>
+        <input type="text" id="room-title-input" placeholder="Ex: Aula ao vivo - Módulo 3">
+      </div>
+      <button class="btn btn-primary" onclick="createRoom()">Criar webinário</button>
+    </div>
+  </div>
+
+  <!-- TELA 2: DASHBOARD DO APRESENTADOR -->
+  <div id="dashboard">
+    <div class="top-bar">
+      <div class="top-bar-left">
+        <span class="logo">Xlaablives</span>
+        <span class="room-title" id="display-title"></span>
+      </div>
+      <div class="top-bar-right">
+        <div class="viewers-count">
+          <span class="dot"></span>
+          <span id="viewer-count">0</span> participantes
+        </div>
+        <span class="badge badge-waiting" id="status-badge">AGUARDANDO</span>
+      </div>
+    </div>
+
+    <div class="screen-share-bar" id="screen-share-bar">
+      Compartilhando sua tela...
+      <button class="btn btn-sm btn-outline" onclick="stopScreenShare()">Parar</button>
+    </div>
+
+    <div class="main-content">
+      <!-- ÁREA DE SLIDES -->
+      <div class="slide-area">
+        <div class="slide-container" id="slide-container">
+          <div class="upload-zone" id="upload-zone" onclick="document.getElementById('pdf-input').click()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 16V4m0 0L8 8m4-4l4 4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/>
+            </svg>
+            <span>Clique para enviar seu PDF</span>
+            <span style="font-size:12px">ou arraste e solte aqui</span>
+          </div>
+          <canvas id="pdf-canvas" style="display:none"></canvas>
+        </div>
+        <input type="file" id="pdf-input" accept=".pdf" style="display:none" onchange="handlePdfUpload(event)">
+
+        <div class="slide-controls">
+          <div class="slide-nav">
+            <button onclick="prevSlide()" id="btn-prev" disabled>&larr;</button>
+            <span class="slide-info" id="slide-info">—</span>
+            <button onclick="nextSlide()" id="btn-next" disabled>&rarr;</button>
+          </div>
+          <div class="action-buttons">
+            <button class="btn btn-sm btn-outline" onclick="openShareModal()">Compartilhar link</button>
+            <button class="btn btn-sm btn-outline" onclick="toggleScreenShare()" id="btn-screen">Tela</button>
+            <button class="btn btn-sm btn-success" onclick="goLive()" id="btn-live">Iniciar ao vivo</button>
+            <button class="btn btn-sm btn-danger" onclick="endRoom()" id="btn-end" style="display:none">Encerrar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SIDEBAR: CHAT -->
+      <div class="sidebar">
+        <div class="sidebar-header">
+          Chat dos participantes
+          <span id="msg-count" style="color:var(--text-muted);font-weight:400;font-size:12px">0 mensagens</span>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+          <div class="chat-empty">Nenhuma mensagem ainda</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: COMPARTILHAR LINK -->
+  <div class="modal-overlay" id="share-modal" onclick="closeShareModal(event)">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h2>Compartilhar webinário</h2>
+      <p style="color:var(--text-muted);margin-bottom:16px;font-size:14px">
+        Envie este link para os participantes. Eles não verão uns aos outros.
+      </p>
+      <div class="share-link-box">
+        <input type="text" id="share-link-input" readonly>
+        <button class="btn btn-sm btn-primary" onclick="copyLink()">Copiar</button>
+      </div>
+      <span class="copy-feedback" id="copy-feedback">Link copiado!</span>
+    </div>
+  </div>
+
+  <script>
+    // ── CONFIG ──
+    const SUPABASE_URL = 'https://nvnzyupuecyeepxtiltt.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im52bnp5dXB1ZWN5ZWVweHRpbHR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5ODU3MzEsImV4cCI6MjA5MTU2MTczMX0.xsWsvlR1K66kDtJFtzIKzkpZ5sKa-iwDtL4uIInsif4';
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // PDF.js worker
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    // ── STATE ──
+    let room = null;
+    let pdfDoc = null;
+    let currentSlide = 1;
+    let totalSlides = 0;
+    let screenStream = null;
+    let chatSubscription = null;
+    let participantSubscription = null;
+    let messageCount = 0;
+
+    // ── CRIAR SALA ──
+    async function createRoom() {
+      const title = document.getElementById('room-title-input').value.trim();
+      if (!title) {
+        document.getElementById('room-title-input').style.borderColor = 'var(--danger)';
+        return;
+      }
+
+      const slug = title.toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '')
+        + '-' + Math.random().toString(36).substring(2, 8);
+
+      const { data, error } = await supabase
+        .from('rooms')
+        .insert({ title, slug })
+        .select()
+        .single();
+
+      if (error) {
+        alert('Erro ao criar sala: ' + error.message);
+        return;
+      }
+
+      room = data;
+      localStorage.setItem('xlaab_presenter_key_' + room.id, room.presenter_key);
+      showDashboard();
+    }
+
+    // ── MOSTRAR DASHBOARD ──
+    function showDashboard() {
+      document.getElementById('create-screen').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'flex';
+      document.getElementById('dashboard').style.flexDirection = 'column';
+      document.getElementById('display-title').textContent = room.title;
+
+      setupRealtimeSubscriptions();
+      loadExistingMessages();
+    }
+
+    // ── REALTIME ──
+    function setupRealtimeSubscriptions() {
+      // Escutar novas mensagens do chat
+      chatSubscription = supabase
+        .channel('chat-' + room.id)
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'chat_messages',
+          filter: 'room_id=eq.' + room.id
+        }, (payload) => {
+          addChatMessage(payload.new);
+        })
+        .subscribe();
+
+      // Escutar participantes
+      participantSubscription = supabase
+        .channel('participants-' + room.id)
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'participants',
+          filter: 'room_id=eq.' + room.id
+        }, () => {
+          updateViewerCount();
+        })
+        .subscribe();
+    }
+
+    async function loadExistingMessages() {
+      const { data } = await supabase
+        .from('chat_messages')
+        .select('*')
+        .eq('room_id', room.id)
+        .order('created_at', { ascending: true });
+
+      if (data && data.length > 0) {
+        data.forEach(msg => addChatMessage(msg));
+      }
+    }
+
+    async function updateViewerCount() {
+      const { count } = await supabase
+        .from('participants')
+        .select('*', { count: 'exact', head: true })
+        .eq('room_id', room.id)
+        .eq('is_active', true);
+
+      document.getElementById('viewer-count').textContent = count || 0;
+    }
+
+    // ── CHAT ──
+    function addChatMessage(msg) {
+      const container = document.getElementById('chat-messages');
+      const empty = container.querySelector('.chat-empty');
+      if (empty) empty.remove();
+
+      const time = new Date(msg.created_at).toLocaleTimeString('pt-BR', {
+        hour: '2-digit', minute: '2-digit'
+      });
+
+      const div = document.createElement('div');
+      div.className = 'chat-msg';
+      div.innerHTML = `
+        <div class="chat-msg-header">
+          <span class="chat-msg-name">${escapeHtml(msg.nickname)}</span>
+          <span class="chat-msg-time">${time}</span>
+        </div>
+        <div class="chat-msg-text">${escapeHtml(msg.message)}</div>
+      `;
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+
+      messageCount++;
+      document.getElementById('msg-count').textContent = messageCount + ' mensagens';
+    }
+
+    function escapeHtml(text) {
+      const d = document.createElement('div');
+      d.textContent = text;
+      return d.innerHTML;
+    }
+
+    // ── PDF ──
+    async function handlePdfUpload(event) {
+      const file = event.target.files[0];
+      if (!file || file.type !== 'application/pdf') return;
+
+      // Upload para Supabase Storage
+      const filePath = `${room.id}/${file.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from('slides')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) {
+        alert('Erro no upload: ' + uploadError.message);
+        return;
+      }
+
+      // Salvar URL pública no room
+      const { data: urlData } = supabase.storage.from('slides').getPublicUrl(filePath);
+
+      // Carregar PDF localmente
+      const arrayBuffer = await file.arrayBuffer();
+      pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      totalSlides = pdfDoc.numPages;
+      currentSlide = 1;
+
+      // Atualizar no banco
+      await supabase
+        .from('rooms')
+        .update({
+          current_slide: 1,
+          total_slides: totalSlides,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', room.id);
+
+      // Esconder upload zone, mostrar canvas
+      document.getElementById('upload-zone').style.display = 'none';
+      document.getElementById('pdf-canvas').style.display = 'block';
+
+      renderSlide(currentSlide);
+      updateSlideControls();
+    }
+
+    async function renderSlide(num) {
+      if (!pdfDoc) return;
+
+      const page = await pdfDoc.getPage(num);
+      const canvas = document.getElementById('pdf-canvas');
+      const ctx = canvas.getContext('2d');
+      const container = document.getElementById('slide-container');
+
+      // Escalar para caber no container
+      const containerWidth = container.clientWidth - 40;
+      const containerHeight = container.clientHeight - 40;
+      const viewport = page.getViewport({ scale: 1 });
+      const scale = Math.min(containerWidth / viewport.width, containerHeight / viewport.height);
+      const scaledViewport = page.getViewport({ scale });
+
+      canvas.width = scaledViewport.width;
+      canvas.height = scaledViewport.height;
+
+      await page.render({ canvasContext: ctx, viewport: scaledViewport }).promise;
+    }
+
+    function updateSlideControls() {
+      document.getElementById('btn-prev').disabled = currentSlide <= 1;
+      document.getElementById('btn-next').disabled = currentSlide >= totalSlides;
+      document.getElementById('slide-info').textContent =
+        totalSlides > 0 ? `${currentSlide} / ${totalSlides}` : '—';
+    }
+
+    async function nextSlide() {
+      if (currentSlide >= totalSlides) return;
+      currentSlide++;
+      renderSlide(currentSlide);
+      updateSlideControls();
+      await syncSlide();
+    }
+
+    async function prevSlide() {
+      if (currentSlide <= 1) return;
+      currentSlide--;
+      renderSlide(currentSlide);
+      updateSlideControls();
+      await syncSlide();
+    }
+
+    async function syncSlide() {
+      await supabase
+        .from('rooms')
+        .update({ current_slide: currentSlide, updated_at: new Date().toISOString() })
+        .eq('id', room.id);
+    }
+
+    // ── CONTROLES DA SALA ──
+    async function goLive() {
+      await supabase
+        .from('rooms')
+        .update({ status: 'live', updated_at: new Date().toISOString() })
+        .eq('id', room.id);
+
+      room.status = 'live';
+      updateStatusBadge();
+      document.getElementById('btn-live').style.display = 'none';
+      document.getElementById('btn-end').style.display = 'inline-flex';
+    }
+
+    async function endRoom() {
+      if (!confirm('Tem certeza que deseja encerrar o webinário?')) return;
+
+      await supabase
+        .from('rooms')
+        .update({ status: 'ended', updated_at: new Date().toISOString() })
+        .eq('id', room.id);
+
+      room.status = 'ended';
+      updateStatusBadge();
+      document.getElementById('btn-end').style.display = 'none';
+    }
+
+    function updateStatusBadge() {
+      const badge = document.getElementById('status-badge');
+      badge.className = 'badge badge-' + room.status;
+      const labels = { waiting: 'AGUARDANDO', live: 'AO VIVO', ended: 'ENCERRADO' };
+      badge.textContent = labels[room.status] || room.status;
+    }
+
+    // ── COMPARTILHAR LINK ──
+    function getViewerUrl() {
+      const base = window.location.href.replace('presenter.html', 'viewer.html');
+      return base + '?sala=' + room.slug;
+    }
+
+    function openShareModal() {
+      document.getElementById('share-link-input').value = getViewerUrl();
+      document.getElementById('share-modal').classList.add('active');
+    }
+
+    function closeShareModal(e) {
+      if (e.target === document.getElementById('share-modal')) {
+        document.getElementById('share-modal').classList.remove('active');
+      }
+    }
+
+    function copyLink() {
+      const input = document.getElementById('share-link-input');
+      navigator.clipboard.writeText(input.value);
+      const feedback = document.getElementById('copy-feedback');
+      feedback.style.display = 'inline';
+      setTimeout(() => feedback.style.display = 'none', 2000);
+    }
+
+    // ── COMPARTILHAR TELA ──
+    async function toggleScreenShare() {
+      if (screenStream) {
+        stopScreenShare();
+      } else {
+        startScreenShare();
+      }
+    }
+
+    async function startScreenShare() {
+      try {
+        screenStream = await navigator.mediaDevices.getDisplayMedia({
+          video: { cursor: 'always' },
+          audio: false
+        });
+
+        await supabase
+          .from('rooms')
+          .update({ screen_sharing: true, updated_at: new Date().toISOString() })
+          .eq('id', room.id);
+
+        document.getElementById('screen-share-bar').classList.add('active');
+        document.getElementById('btn-screen').textContent = 'Parar tela';
+        document.getElementById('btn-screen').style.borderColor = 'var(--danger)';
+
+        // Capturar frames e enviar via Realtime Broadcast
+        const video = document.createElement('video');
+        video.srcObject = screenStream;
+        video.play();
+
+        const captureCanvas = document.createElement('canvas');
+        const captureCtx = captureCanvas.getContext('2d');
+
+        const broadcastChannel = supabase.channel('screen-' + room.id);
+        await broadcastChannel.subscribe();
+
+        const captureInterval = setInterval(() => {
+          if (!screenStream || !screenStream.active) {
+            clearInterval(captureInterval);
+            return;
+          }
+          captureCanvas.width = video.videoWidth / 2;
+          captureCanvas.height = video.videoHeight / 2;
+          captureCtx.drawImage(video, 0, 0, captureCanvas.width, captureCanvas.height);
+          const frame = captureCanvas.toDataURL('image/jpeg', 0.5);
+          broadcastChannel.send({
+            type: 'broadcast',
+            event: 'screen-frame',
+            payload: { frame }
+          });
+        }, 800);
+
+        screenStream.getVideoTracks()[0].onended = () => {
+          clearInterval(captureInterval);
+          stopScreenShare();
+        };
+
+      } catch (err) {
+        console.log('Compartilhamento cancelado:', err);
+      }
+    }
+
+    async function stopScreenShare() {
+      if (screenStream) {
+        screenStream.getTracks().forEach(t => t.stop());
+        screenStream = null;
+      }
+
+      await supabase
+        .from('rooms')
+        .update({ screen_sharing: false, updated_at: new Date().toISOString() })
+        .eq('id', room.id);
+
+      document.getElementById('screen-share-bar').classList.remove('active');
+      document.getElementById('btn-screen').textContent = 'Tela';
+      document.getElementById('btn-screen').style.borderColor = '';
+    }
+
+    // ── DRAG & DROP ──
+    const slideContainer = document.getElementById('slide-container');
+    slideContainer.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      slideContainer.style.borderColor = 'var(--accent)';
+    });
+    slideContainer.addEventListener('dragleave', () => {
+      slideContainer.style.borderColor = 'var(--border)';
+    });
+    slideContainer.addEventListener('drop', (e) => {
+      e.preventDefault();
+      slideContainer.style.borderColor = 'var(--border)';
+      const file = e.dataTransfer.files[0];
+      if (file && file.type === 'application/pdf') {
+        const input = document.getElementById('pdf-input');
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        input.files = dt.files;
+        handlePdfUpload({ target: input });
+      }
+    });
+
+    // ── ATALHOS DE TECLADO ──
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') nextSlide();
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') prevSlide();
+    });
+
+    // ── ATUALIZAR CONTAGEM DE VIEWERS PERIODICAMENTE ──
+    setInterval(updateViewerCount, 10000);
+
+    // ── WINDOW RESIZE ──
+    window.addEventListener('resize', () => {
+      if (pdfDoc) renderSlide(currentSlide);
+    });
+  </script>
+</body>
+</html>
