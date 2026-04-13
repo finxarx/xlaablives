@@ -649,8 +649,14 @@
         }
 
         function setupRealtimeListeners() {
-            roomChannel = sb.channel('room-' + room.id);
-            roomChannel.on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rooms' }, (payload) => {
+            // Remove existing channels to avoid duplicate subscription errors
+            if (roomChannel) {
+                sb.removeChannel(roomChannel);
+                roomChannel = null;
+            }
+
+            roomChannel = sb.channel('room-changes-' + room.id);
+            roomChannel.on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rooms', filter: 'id=eq.' + room.id }, (payload) => {
                 room = payload.new;
                 updateStatusBadge();
                 if (payload.new.current_slide && currentPage !== payload.new.current_slide) {
@@ -663,10 +669,9 @@
             });
             roomChannel.subscribe();
 
-            const chatChannel = sb.channel('chat-' + room.id).on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, (payload) => {
-                if (payload.new.room_id === room.id) {
-                    addChatMessage(payload.new);
-                }
+            const chatChannel = sb.channel('chat-changes-' + room.id);
+            chatChannel.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: 'room_id=eq.' + room.id }, (payload) => {
+                addChatMessage(payload.new);
             });
             chatChannel.subscribe();
         }
