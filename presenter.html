@@ -727,6 +727,8 @@
         let currentPage = 1;
         let sb = null;
         let roomChannel = null;
+        let chatChannel = null;
+        let participantChannel = null;
         let localTracks = { video: null, audio: null };
         let liveKitRoom = null;
         let cameraEnabled = false;
@@ -878,16 +880,25 @@
         }
 
         function setupRealtimeListeners() {
-            roomChannel = sb.channel('room-' + room.id);
-            roomChannel.on('broadcast', { event: 'participant_joined' }, () => { updateViewerCount(); });
-            roomChannel.subscribe();
-            sb.channel('participants-' + room.id).on('postgres_changes', { event: '*', schema: 'public', table: 'participants' }, () => {
-                updateViewerCount();
+            // Clean up existing channels
+            if (roomChannel) { sb.removeChannel(roomChannel); roomChannel = null; }
+            if (chatChannel) { sb.removeChannel(chatChannel); chatChannel = null; }
+            if (participantChannel) { sb.removeChannel(participantChannel); participantChannel = null; }
+
+            // Listen for participant changes
+            participantChannel = sb.channel('presenter-participants-' + room.id);
+            participantChannel.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'participants', filter: 'room_id=eq.' + room.id }, (payload) => {
                 loadParticipants();
-            }).subscribe();
-            sb.channel('chat-' + room.id).on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, (payload) => {
-                if (payload.new.room_id === room.id) addChatMessage(payload.new);
-            }).subscribe();
+                updateViewerCount();
+            });
+            participantChannel.subscribe();
+
+            // Listen for chat messages
+            chatChannel = sb.channel('presenter-chat-' + room.id);
+            chatChannel.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: 'room_id=eq.' + room.id }, (payload) => {
+                addChatMessage(payload.new);
+            });
+            chatChannel.subscribe();
         }
 
         async function updateViewerCount() {
