@@ -740,23 +740,34 @@
 
         async function createRoom(title) {
             try {
-                const { data, error } = await sb.from('rooms').insert([{
-                    title,
-                    slug: generateSlug(),
-                    status: 'waiting',
-                    current_slide: 1,
-                    total_slides: 0,
-                    screen_sharing: false,
-                    presenter_key: generatePresenterKey()
-                }]).select().single();
-                if (error) throw error;
-                room = data;
-                showDashboard();
+                // Check if room with same title already exists
+                let { data: existing } = await sb.from('rooms').select('*').eq('title', title).order('created_at', { ascending: false }).limit(1);
+                
+                if (existing && existing.length > 0) {
+                    room = existing[0];
+                    console.log('Reusing existing room:', room.id, room.slug);
+                } else {
+                    const slug = Math.random().toString(36).substring(2, 10);
+                    const presenterKey = Math.random().toString(36).substring(2, 10);
+                    const { data, error } = await sb.from('rooms').insert({
+                        title: title,
+                        slug: slug,
+                        presenter_key: presenterKey,
+                        status: 'waiting'
+                    }).select().single();
+                    if (error) throw error;
+                    room = data;
+                    console.log('Created new room:', room.id, room.slug);
+                }
+
                 setupRealtimeListeners();
-                connectToLiveKit();
-                startViewerCountUpdate();
-            } catch (error) {
-                alert('Erro ao criar webinário: ' + error.message);
+                document.getElementById('createRoomScreen').classList.remove('active');
+                document.getElementById('dashboardScreen').classList.add('active');
+                document.getElementById('topBarTitle').textContent = room.title;
+                updateStatusBadge();
+            } catch (err) {
+                console.error('Erro ao criar sala:', err);
+                alert('Erro ao criar sala: ' + err.message);
             }
         }
 
@@ -917,19 +928,38 @@
         }
 
         async function loadParticipants() {
-            const { data } = await sb.from('participants').select('*').eq('room_id', room.id).eq('is_active', true).order('created_at', { ascending: false });
-            const list = document.getElementById('participantsList');
-            list.innerHTML = '';
-            if (!data || data.length === 0) {
-                list.innerHTML = '<div class="empty-state">Nenhum participante conectado</div>';
-                return;
+            try {
+                if (!room || !room.id) {
+                    console.warn('loadParticipants: room not set');
+                    return;
+                }
+                console.log('loadParticipants: querying for room', room.id);
+                const { data, error } = await sb.from('participants').select('*').eq('room_id', room.id).eq('is_active', true).order('joined_at', { ascending: true });
+                
+                if (error) {
+                    console.error('loadParticipants error:', error);
+                    return;
+                }
+                
+                console.log('loadParticipants: found', data ? data.length : 0, 'participants');
+                const container = document.getElementById('participantsList');
+                if (!container) { console.error('participantsList element not found'); return; }
+                container.innerHTML = '';
+                
+                if (!data || data.length === 0) {
+                    container.innerHTML = '<div class="empty-state">Nenhum participante conectado</div>';
+                    return;
+                }
+                
+                data.forEach(p => {
+                    const div = document.createElement('div');
+                    div.className = 'participant-item';
+                    div.innerHTML = '<span class="participant-dot"></span>' + (p.nickname || 'Anonimo');
+                    container.appendChild(div);
+                });
+            } catch (err) {
+                console.error('loadParticipants exception:', err);
             }
-            data.forEach(p => {
-                const div = document.createElement('div');
-                div.className = 'participant-item';
-                div.innerHTML = `<div class="participant-dot"></div><div class="participant-name">${escapeHtml(p.nickname)}</div>`;
-                list.appendChild(div);
-            });
         }
 
         function addChatMessage(msg) {
