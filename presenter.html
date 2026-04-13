@@ -765,6 +765,7 @@
                 document.getElementById('dashboardScreen').classList.add('active');
                 document.getElementById('topBarTitle').textContent = room.title;
                 updateStatusBadge();
+            connectToLiveKit();
             } catch (err) {
                 console.error('Erro ao criar sala:', err);
                 alert('Erro ao criar sala: ' + err.message);
