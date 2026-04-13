@@ -649,7 +649,7 @@
             }
         }
 
-        function setupRealtimeListenerfunction setupRealtimeListeners() {
+        function setupRealtimeListeners() {
             // Remove existing channels to avoid duplicate subscription errors
             if (roomChannel) {
                 sb.removeChannel(roomChannel);
@@ -679,7 +679,9 @@
                 addChatMessage(payload.new);
             });
             chatChannel.subscribe();
-        }age(msg) {
+        }
+
+        function addChatMessage(msg) {
             const container = document.getElementById('chatMessages');
             if (container.querySelector('.empty-chat')) {
                 container.innerHTML = '';
