@@ -1,4 +1,4 @@
-<\!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -484,7 +484,7 @@
                     <div id="endedOverlay" class="ended-overlay">
                         <div class="ended-message">
                             <h2>WebinÃ¡rio Encerrado</h2>
-                            <p>Obrigado por participar\!</p>
+                            <p>Obrigado por participar!</p>
                         </div>
                     </div>
                 </div>
@@ -540,13 +540,13 @@
         async function loadRoom() {
             try {
                 const slug = getRoomSlugFromUrl();
-                if (\!slug) {
+                if (!slug) {
                     showError('WebinÃ¡rio nÃ£o encontrado. URL invÃ¡lida.');
                     return;
                 }
 
                 const { data, error } = await sb.from('rooms').select('*').eq('slug', slug).single();
-                if (error || \!data) {
+                if (error || !data) {
                     showError('WebinÃ¡rio nÃ£o encontrado ou foi encerrado.');
                     return;
                 }
@@ -632,7 +632,7 @@
         }
 
         async function renderSlide() {
-            if (\!currentPdfDoc || currentPage < 1 || currentPage > currentPdfDoc.numPages) return;
+            if (!currentPdfDoc || currentPage < 1 || currentPage > currentPdfDoc.numPages) return;
             try {
                 const page = await currentPdfDoc.getPage(currentPage);
                 const canvas = document.getElementById('pdfCanvas');
@@ -653,11 +653,11 @@
             roomChannel.on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rooms' }, (payload) => {
                 room = payload.new;
                 updateStatusBadge();
-                if (payload.new.current_slide && currentPage \!== payload.new.current_slide) {
+                if (payload.new.current_slide && currentPage !== payload.new.current_slide) {
                     currentPage = payload.new.current_slide;
                     renderSlide();
                 }
-                if (payload.new.screen_sharing && payload.new.screen_sharing \!== room.screen_sharing) {
+                if (payload.new.screen_sharing && payload.new.screen_sharing !== room.screen_sharing) {
                     loadSlides();
                 }
             }).subscribe();
@@ -684,7 +684,7 @@
         async function sendChatMessage() {
             const input = document.getElementById('chatInput');
             const message = input.value.trim();
-            if (\!message) return;
+            if (!message) return;
 
             try {
                 await sb.from('chat_messages').insert([{
@@ -706,7 +706,7 @@
         }
 
         async function connectToLiveKit() {
-            if (\!LIVEKIT_URL) {
+            if (!LIVEKIT_URL) {
                 console.warn('LiveKit URL not configured');
                 document.getElementById('liveKitNotice').style.display = 'block';
                 return;
