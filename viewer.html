@@ -475,6 +475,28 @@
                 font-size: 1.2rem;
             }
         }
+        .btn-leave {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: opacity 0.2s;
+        }
+        .btn-leave:hover {
+            opacity: 0.85;
+        }
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 16px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+        }
         </style>
 </head>
 <body>
@@ -505,6 +527,7 @@
                     <div class="status-badge waiting" id="statusBadge">Aguardando</div>
                 </div>
             </div>
+            <button class="btn-leave" id="leaveBtn" onclick="leaveWebinar()">Sair</button>
         </div>
 
         <div class="main-content">
@@ -724,6 +747,8 @@
         }
 
         function addChatMessage(msg) {
+            // Privacidade: mostrar apenas mensagens proprias e do apresentador
+            if (msg.participant_id && participant && msg.participant_id !== participant.id) return;
             const container = document.getElementById('chatMessages');
             if (container.querySelector('.empty-chat')) {
                 container.innerHTML = '';
@@ -794,6 +819,42 @@
             } catch (error) {
                 console.error('LiveKit connection failed:', error);
                 document.getElementById('liveKitNotice').style.display = 'block';
+            }
+        }
+
+        async function leaveWebinar() {
+            try {
+                // Disconnect from LiveKit
+                if (window.livekitRoom) {
+                    window.livekitRoom.disconnect();
+                    window.livekitRoom = null;
+                }
+
+                // Mark participant as inactive
+                if (participant && participant.id) {
+                    await sb.from('participants').update({ is_active: false }).eq('id', participant.id);
+                }
+
+                // Remove realtime channels
+                if (roomChannel) { sb.removeChannel(roomChannel); roomChannel = null; }
+                if (chatChannel) { sb.removeChannel(chatChannel); chatChannel = null; }
+
+                // Clear video
+                const videoContainer = document.getElementById('presenterVideo');
+                if (videoContainer) videoContainer.innerHTML = '';
+
+                // Return to join screen
+                document.getElementById('webinarScreen').classList.remove('active');
+                document.getElementById('join-screen').classList.add('active');
+
+                // Reset participant
+                participant = null;
+            } catch (err) {
+                console.error('Erro ao sair:', err);
+                // Force return to join screen even on error
+                document.getElementById('webinarScreen').classList.remove('active');
+                document.getElementById('join-screen').classList.add('active');
+                participant = null;
             }
         }
 
