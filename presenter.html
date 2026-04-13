@@ -343,13 +343,13 @@
 
         .btn-action:hover {
             background: var(--accent);
-            border-color: var(---accent);
+            border-color: var(--accent);
             color: white;
         }
 
         .btn-action.active {
             background: var(--accent);
-            border-color: var(---accent);
+            border-color: var(--accent);
             color: white;
         }
 
@@ -423,7 +423,7 @@
 
         .tab.active {
             color: var(--accent);
-            border-bottom: 2px solid var(---accent);
+            border-bottom: 2px solid var(--accent);
             margin-bottom: -1px;
         }
 
@@ -543,7 +543,7 @@
             margin-bottom: 2rem;
         }
 
-        .url-box  {
+        .url-box {
             display: flex;
             gap: 0.75rem;
         }
@@ -623,8 +623,8 @@
     <div class="create-room-screen active" id="createRoomScreen">
         <div class="create-room-container">
             <div class="logo">Xlaablives</div>
-            <h1>Crie seu webinÃ¡rio</h1>
-            <p>Comece a transmitir para seus participantes</p>
+            <h1 class="create-room-title">Crie seu webinÃ¡rio</h1>
+            <p class="create-room-subtitle">Comece a transmitir para seus participantes</p>
             <form id="createRoomForm">
                 <div class="form-group">
                     <label for="titleInput">TÃ­tulo do webinÃ¡rio</label>
@@ -711,3 +711,358 @@
             </div>
         </div>
     </div>
+
+    <script>
+        const SUPABASE_URL = 'https://nvnzyupuecyeepxtiltt.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im52bnp5dXB1ZWN5ZWVweHRpbHR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5ODU3MzEsImV4cCI6MjA5MTU2MTczMX0.xsWsvlR1K66kDtJFtzIKzkpZ5sKa-iwDtL4uIInsif4';
+        let LIVEKIT_URL = 'wss://finxarx-org-zidszlxp.livekit.cloud';
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        let room = null;
+        let currentPdfDoc = null;
+        let currentPage = 1;
+        let sb = null;
+        let roomChannel = null;
+        let localTracks = { video: null, audio: null };
+        let liveKitRoom = null;
+        let cameraEnabled = false;
+        let micEnabled = false;
+
+        function initSupabase() {
+            sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        }
+
+        async function createRoom(title) {
+            try {
+                const { data, error } = await sb.from('rooms').insert([{
+                    title,
+                    slug: generateSlug(),
+                    status: 'waiting',
+                    current_slide: 1,
+                    total_slides: 0,
+                    screen_sharing: false,
+                    presenter_key: generatePresenterKey()
+                }]).select().single();
+                if (error) throw error;
+                room = data;
+                showDashboard();
+                setupRealtimeListeners();
+                connectToLiveKit();
+                startViewerCountUpdate();
+            } catch (error) {
+                alert('Erro ao criar webinÃ¡rio: ' + error.message);
+            }
+        }
+
+        function generateSlug() {
+            return Math.random().toString(36).substring(2, 10);
+        }
+
+        function generatePresenterKey() {
+            return Math.random().toString(36).substring(2, 15);
+        }
+
+        function showDashboard() {
+            document.getElementById('createRoomScreen').classList.remove('active');
+            document.getElementById('dashboardScreen').classList.add('active');
+            document.getElementById('topBarTitle').textContent = room.title;
+            updateStatusBadge();
+        }
+
+        function updateStatusBadge() {
+            const badge = document.getElementById('statusBadge');
+            badge.className = 'status-badge ' + room.status;
+            const labels = { 'waiting': 'Aguardando', 'live': 'Ao Vivo', 'ended': 'Encerrado' };
+            badge.textContent = labels[room.status] || room.status;
+        }
+
+        function setupUploadZone() {
+            const zone = document.getElementById('uploadZone');
+            zone.addEventListener('click', () => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'application/pdf';
+                input.addEventListener('change', (e) => {
+                    if (e.target.files.length > 0) uploadPDF(e.target.files[0]);
+                });
+                input.click();
+            });
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                zone.classList.add('dragover');
+            });
+            zone.addEventListener('dragleave', () => {
+                zone.classList.remove('dragover');
+            });
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('dragover');
+                if (e.dataTransfer.files.length > 0) uploadPDF(e.dataTransfer.files[0]);
+            });
+        }
+
+        async function uploadPDF(file) {
+            try {
+                const filename = `${room.id}/${Date.now()}.pdf`;
+                const { error } = await sb.storage.from('slides').upload(filename, file);
+                if (error) throw error;
+                const { data } = sb.storage.from('slides').getPublicUrl(filename);
+                await loadPDF(data.publicUrl);
+                document.getElementById('uploadZone').style.display = 'none';
+            } catch (error) {
+                alert('Erro ao enviar PDF: ' + error.message);
+            }
+        }
+
+        async function loadPDF(url) {
+            try {
+                const pdf = await pdfjsLib.getDocument(url).promise;
+                currentPdfDoc = pdf;
+                currentPage = 1;
+                await sb.from('rooms').update({ total_slides: pdf.numPages, current_slide: 1 }).eq('id', room.id);
+                room.total_slides = pdf.numPages;
+                room.current_slide = 1;
+                updateSlideCounter();
+                renderSlide();
+            } catch (error) {
+                alert('Erro ao carregar PDF: ' + error.message);
+            }
+        }
+
+        async function renderSlide() {
+            if (\!currentPdfDoc) return;
+            try {
+                const page = await currentPdfDoc.getPage(currentPage);
+                const canvas = document.getElementById('pdfCanvas');
+                const ctx = canvas.getContext('2d');
+                const viewport = page.getViewport({ scale: 2 });
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                await page.render({ canvasContext: ctx, viewport }).promise;
+                canvas.style.display = 'block';
+                updateSlideCounter();
+            } catch (error) {
+                console.error('Erro ao renderizar slide:', error);
+            }
+        }
+
+        function updateSlideCounter() {
+            document.getElementById('currentSlide').textContent = currentPage;
+            document.getElementById('totalSlides').textContent = room.total_slides;
+            document.getElementById('prevSlideBtn').disabled = currentPage <= 1;
+            document.getElementById('nextSlideBtn').disabled = currentPage >= room.total_slides;
+        }
+
+        async function nextSlide() {
+            if (currentPage < room.total_slides) {
+                currentPage++;
+                renderSlide();
+                await updateRoomSlide();
+            }
+        }
+
+        async function prevSlide() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderSlide();
+                await updateRoomSlide();
+            }
+        }
+
+        async function updateRoomSlide() {
+            await sb.from('rooms').update({ current_slide: currentPage }).eq('id', room.id);
+        }
+
+        function setupRealtimeListeners() {
+            roomChannel = sb.channel('room-' + room.id);
+            roomChannel.on('broadcast', { event: 'participant_joined' }, () => { updateViewerCount(); });
+            roomChannel.subscribe();
+            sb.channel('participants-' + room.id).on('postgres_changes', { event: '*', schema: 'public', table: 'participants' }, () => {
+                updateViewerCount();
+                loadParticipants();
+            }).subscribe();
+            sb.channel('chat-' + room.id).on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, (payload) => {
+                if (payload.new.room_id === room.id) addChatMessage(payload.new);
+            }).subscribe();
+        }
+
+        async function updateViewerCount() {
+            const { count } = await sb.from('participants').select('*', { count: 'exact', head: true }).eq('room_id', room.id).eq('is_active', true);
+            document.getElementById('participantCount').textContent = count || 0;
+        }
+
+        function startViewerCountUpdate() {
+            if (room) {
+                setInterval(updateViewerCount, 10000);
+            }
+        }
+
+        async function loadParticipants() {
+            const { data } = await sb.from('participants').select('*').eq('room_id', room.id).eq('is_active', true).order('created_at', { ascending: false });
+            const list = document.getElementById('participantsList');
+            list.innerHTML = '';
+            if (\!data || data.length === 0) {
+                list.innerHTML = '<div class="empty-state">Nenhum participante conectado</div>';
+                return;
+            }
+            data.forEach(p => {
+                const div = document.createElement('div');
+                div.className = 'participant-item';
+                div.innerHTML = `<div class="participant-dot"></div><div class="participant-name">${escapeHtml(p.nickname)}</div>`;
+                list.appendChild(div);
+            });
+        }
+
+        function addChatMessage(msg) {
+            const container = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = 'chat-message';
+            div.innerHTML = `<div class="chat-nickname">${escapeHtml(msg.nickname)}</div><div class="chat-text">${escapeHtml(msg.message)}</div>`;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (room && currentPdfDoc) {
+                if (e.key === 'ArrowRight') nextSlide();
+                else if (e.key === 'ArrowLeft') prevSlide();
+            }
+        });
+
+        async function connectToLiveKit() {
+            if (\!LIVEKIT_URL) {
+                console.warn('LiveKit URL not configured');
+                document.getElementById('liveKitNotice').style.display = 'block';
+                return;
+            }
+            try {
+                const response = await fetch(SUPABASE_URL + '/functions/v1/livekit-token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ roomName: room.id, participantName: 'Apresentador', isPresenter: true })
+                });
+                const { token, error } = await response.json();
+                if (error) throw new Error(error);
+                const { LivekitClient } = window;
+                liveKitRoom = new LivekitClient.Room();
+                await liveKitRoom.connect(LIVEKIT_URL, token);
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+                    audio: true
+                });
+                localTracks.video = stream.getVideoTracks()[0];
+                localTracks.audio = stream.getAudioTracks()[0];
+                const video = document.getElementById('localVideo');
+                video.srcObject = stream;
+                document.getElementById('videoPreview').style.display = 'block';
+                await liveKitRoom.localParticipant.publishTrack(localTracks.video);
+                await liveKitRoom.localParticipant.publishTrack(localTracks.audio);
+                cameraEnabled = true;
+                micEnabled = true;
+                updateMediaButtons();
+            } catch (error) {
+                console.error('LiveKit connection failed:', error);
+                document.getElementById('liveKitNotice').style.display = 'block';
+            }
+        }
+
+        async function toggleMic() {
+            if (\!liveKitRoom) return;
+            if (localTracks.audio) {
+                micEnabled = \!micEnabled;
+                localTracks.audio.enabled = micEnabled;
+                updateMediaButtons();
+            }
+        }
+
+        async function toggleCamera() {
+            if (\!liveKitRoom) return;
+            if (localTracks.video) {
+                cameraEnabled = \!cameraEnabled;
+                localTracks.video.enabled = cameraEnabled;
+                const status = document.getElementById('videoStatus');
+                status.textContent = cameraEnabled ? 'CÃ¢mera ativa' : 'CÃ¢mera desligada';
+                updateMediaButtons();
+            }
+        }
+
+        function updateMediaButtons() {
+            const micBtn = document.getElementById('micBtn');
+            const cameraBtn = document.getElementById('cameraBtn');
+            if (micEnabled) micBtn.classList.add('active');
+            else micBtn.classList.remove('active');
+            if (cameraEnabled) cameraBtn.classList.add('active');
+            else cameraBtn.classList.remove('active');
+        }
+
+        async function goLive() {
+            await sb.from('rooms').update({ status: 'live' }).eq('id', room.id);
+            room.status = 'live';
+            updateStatusBadge();
+            document.getElementById('goLiveBtn').style.display = 'none';
+            document.getElementById('endBtn').style.display = 'block';
+        }
+
+        async function endWebinar() {
+            await sb.from('rooms').update({ status: 'ended' }).eq('id', room.id);
+            room.status = 'ended';
+            updateStatusBadge();
+            document.getElementById('endBtn').style.display = 'none';
+            document.getElementById('goLiveBtn').style.display = 'block';
+        }
+
+        function showShareModal() {
+            const url = `${window.location.origin}${window.location.pathname}?sala=${room.slug}`;
+            document.getElementById('shareUrl').value = url;
+            document.getElementById('shareModal').classList.add('active');
+        }
+
+        function closeShareModal() {
+            document.getElementById('shareModal').classList.remove('active');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                const tabName = tab.getAttribute('data-tab');
+                document.getElementById(tabName + 'Tab').classList.add('active');
+            });
+        });
+
+        document.getElementById('createRoomForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const title = document.getElementById('titleInput').value.trim();
+            if (title) createRoom(title);
+        });
+
+        document.getElementById('shareBtn').addEventListener('click', showShareModal);
+        document.getElementById('closeShareBtn').addEventListener('click', closeShareModal);
+        document.getElementById('shareModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('shareModal')) closeShareModal();
+        });
+        document.getElementById('copyBtn').addEventListener('click', () => {
+            const url = document.getElementById('shareUrl');
+            url.select();
+            document.execCommand('copy');
+            alert('Link copiado\!');
+        });
+        document.getElementById('prevSlideBtn').addEventListener('click', prevSlide);
+        document.getElementById('nextSlideBtn').addEventListener('click', nextSlide);
+        document.getElementById('micBtn').addEventListener('click', toggleMic);
+        document.getElementById('cameraBtn').addEventListener('click', toggleCamera);
+        document.getElementById('goLiveBtn').addEventListener('click', goLive);
+        document.getElementById('endBtn').addEventListener('click', endWebinar);
+
+        initSupabase();
+        setupUploadZone();
+    </script>
+</body>
+</html>
