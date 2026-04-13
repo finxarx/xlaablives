@@ -891,14 +891,18 @@
                 loadParticipants();
                 updateViewerCount();
             });
-            participantChannel.subscribe();
+            participantChannel.subscribe((status) => { console.log('Participant channel:', status); if (status === 'SUBSCRIBED') { loadParticipants(); updateViewerCount(); } });
 
             // Listen for chat messages
             chatChannel = sb.channel('presenter-chat-' + room.id);
             chatChannel.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: 'room_id=eq.' + room.id }, (payload) => {
                 addChatMessage(payload.new);
             });
-            chatChannel.subscribe();
+            chatChannel.subscribe((status) => { console.log('Chat channel:', status); });
+
+            // Carregar participantes existentes ao iniciar
+            loadParticipants();
+            updateViewerCount();
         }
 
         async function updateViewerCount() {
