@@ -535,29 +535,37 @@
 
         function getRoomSlugFromUrl() {
             const params = new URLSearchParams(window.location.search);
-            return params.get('sala');
+            return params.get('sala') || params.get('room');
         }
 
         async function loadRoom() {
-            try {
-                const slug = getRoomSlugFromUrl();
-                if (!slug) {
-                    showError('Webinário não encontrado. URL inválida.');
-                    return;
-                }
-
-                const { data, error } = await sb.from('rooms').select('*').eq('slug', slug).single();
-                if (error || !data) {
-                    showError('Webinário não encontrado ou foi encerrado.');
-                    return;
-                }
-
-                room = data;
-                document.getElementById('joinTitle').textContent = room.title;
-                document.getElementById('joinSubtitle').textContent = 'Digite seu nome para assistir';
-            } catch (error) {
-                showError('Erro ao carregar webinário: ' + error.message);
+            const slug = getRoomSlugFromUrl();
+            if (!slug) {
+                showError('URL inv\u00e1lida. Par\u00e2metro "sala" n\u00e3o encontrado.');
+                return;
             }
+            
+            // Try by slug first
+            let { data, error } = await sb.from('rooms').select('*').eq('slug', slug).single();
+            
+            // If not found by slug, try by title
+            if (error || !data) {
+                const titleResult = await sb.from('rooms').select('*').eq('title', slug).order('created_at', { ascending: false }).limit(1);
+                if (!titleResult.error && titleResult.data && titleResult.data.length > 0) {
+                    data = titleResult.data[0];
+                    error = null;
+                }
+            }
+            
+            if (error || !data) {
+                showError('Webin\u00e1rio n\u00e3o encontrado. Verifique o link.');
+                return;
+            }
+            
+            room = data;
+            document.getElementById('room-title').textContent = room.title;
+            document.getElementById('join-screen').style.display = 'flex';
+            updateStatusBadge();
         }
 
         function showError(message) {
@@ -567,20 +575,23 @@
         }
 
         async function joinWebinar(nickname) {
+            if (!room) {
+                alert('Sala n\u00e3o encontrada. Recarregue a p\u00e1gina.');
+                return;
+            }
             try {
-                const { data, error } = await sb.from('participants').insert([{
+                const { error } = await sb.from('participants').insert({
                     room_id: room.id,
-                    nickname,
-                    is_active: true
-                }]).select().single();
-
+                    nickname: nickname
+                });
                 if (error) throw error;
-                participant = data;
+                
                 showWebinarScreen();
                 setupRealtimeListeners();
                 connectToLiveKit();
-            } catch (error) {
-                showError('Erro ao entrar no webinário: ' + error.message);
+            } catch (err) {
+                console.error('Erro ao entrar:', err);
+                alert('Erro ao entrar no webin\u00e1rio. Tente novamente.');
             }
         }
 
