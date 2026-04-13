@@ -660,13 +660,15 @@
                 if (payload.new.screen_sharing && payload.new.screen_sharing !== room.screen_sharing) {
                     loadSlides();
                 }
-            }).subscribe();
+            });
+            roomChannel.subscribe();
 
-            sb.channel('chat-' + room.id).on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, (payload) => {
+            const chatChannel = sb.channel('chat-' + room.id).on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, (payload) => {
                 if (payload.new.room_id === room.id) {
                     addChatMessage(payload.new);
                 }
-            }).subscribe();
+            });
+            chatChannel.subscribe();
         }
 
         function addChatMessage(msg) {
