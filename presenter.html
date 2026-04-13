@@ -627,14 +627,14 @@
     <div class="create-room-screen active" id="createRoomScreen">
         <div class="create-room-container">
             <div class="logo">Xlaablives</div>
-            <h1 class="create-room-title">Crie seu webinÃ¡rio</h1>
+            <h1 class="create-room-title">Crie seu webinário</h1>
             <p class="create-room-subtitle">Comece a transmitir para seus participantes</p>
             <form id="createRoomForm">
                 <div class="form-group">
-                    <label for="titleInput">TÃ­tulo do webinÃ¡rio</label>
-                    <input type="text" id="titleInput" placeholder="Ex: WebinÃ¡rio de InovaÃ§Ã£o 2026" required>
+                    <label for="titleInput">Título do webinário</label>
+                    <input type="text" id="titleInput" placeholder="Ex: Webinário de Inovação 2026" required>
                 </div>
-                <button type="submit" class="btn btn-primary">Criar webinÃ¡rio</button>
+                <button type="submit" class="btn btn-primary">Criar webinário</button>
             </form>
         </div>
     </div>
@@ -654,7 +654,7 @@
         <div class="main-content">
             <div class="slides-area">
                 <div id="liveKitNotice" class="livekit-notice" style="display: none;">
-                    â ï¸ LiveKit nÃ£o configurado. VÃ­deo/Ã¡udio nÃ£o funcionarÃ£o. Configure LIVEKIT_URL para ativar.
+                    â ï¸ LiveKit não configurado. Vídeo/áudio não funcionarão. Configure LIVEKIT_URL para ativar.
                 </div>
                 <div class="pdf-upload-zone" id="uploadZone">
                     <div class="upload-content">
@@ -668,19 +668,19 @@
                     <div class="slide-nav">
                         <button class="btn-nav" id="prevSlideBtn">â Anterior</button>
                         <div class="slide-counter"><span id="currentSlide">-</span> / <span id="totalSlides">-</span></div>
-                        <button class="btn-nav" id="nextSlideBtn">PrÃ³ximo â</button>
+                        <button class="btn-nav" id="nextSlideBtn">Próximo â</button>
                     </div>
                     <div class="action-buttons">
                         <button class="btn-action" id="shareBtn">ð Compartilhar link</button>
                         <button class="btn-action" id="screenShareBtn">ð¥ï¸ Tela</button>
                         <button class="btn-action" id="micBtn">ðï¸ Mic</button>
-                        <button class="btn-action" id="cameraBtn">ð¹ CÃ¢mera</button>
+                        <button class="btn-action" id="cameraBtn">ð¹ Câmera</button>
                         <button class="btn-action" id="goLiveBtn">ð´ Iniciar ao vivo</button>
                         <button class="btn-action btn-danger" id="endBtn" style="display: none;">â¹ï¸ Encerrar</button>
                     </div>
                 </div>
                 <div class="video-preview" id="videoPreview" style="display: none;">
-                    <div class="video-status" id="videoStatus">CÃ¢mera desligada</div>
+                    <div class="video-status" id="videoStatus">Câmera desligada</div>
                     <video id="localVideo" autoplay muted playsinline></video>
                 </div>
             </div>
@@ -702,7 +702,7 @@
 
     <div class="modal-overlay" id="shareModal">
         <div class="modal">
-            <h2 class="modal-title">Compartilhar webinÃ¡rio</h2>
+            <h2 class="modal-title">Compartilhar webinário</h2>
             <div class="modal-content">
                 <p style="margin-bottom: 1rem; color: var(--text-dim);">Compartilhe este link com seus participantes:</p>
                 <div class="url-box">
@@ -754,7 +754,7 @@
                 connectToLiveKit();
                 startViewerCountUpdate();
             } catch (error) {
-                alert('Erro ao criar webinÃ¡rio: ' + error.message);
+                alert('Erro ao criar webinário: ' + error.message);
             }
         }
 
@@ -985,7 +985,7 @@
                 cameraEnabled = !cameraEnabled;
                 localTracks.video.enabled = cameraEnabled;
                 const status = document.getElementById('videoStatus');
-                status.textContent = cameraEnabled ? 'CÃ¢mera ativa' : 'CÃ¢mera desligada';
+                status.textContent = cameraEnabled ? 'Câmera ativa' : 'Câmera desligada';
                 updateMediaButtons();
             }
         }
