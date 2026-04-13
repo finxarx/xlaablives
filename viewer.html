@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xlaablives - Assistir WebinÃ¡rio</title>
+    <title>Xlaablives - Assistir Webinário</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/livekit-client@2/dist/livekit-client.umd.min.js"></script>
@@ -450,7 +450,7 @@
     <div class="join-screen active" id="joinScreen">
         <div class="join-container">
             <div class="logo">Xlaablives</div>
-            <h1 class="join-title" id="joinTitle">Entrar no webinÃ¡rio</h1>
+            <h1 class="join-title" id="joinTitle">Entrar no webinário</h1>
             <p class="join-subtitle" id="joinSubtitle">Digite seu nome para participar</p>
 
             <div id="errorMessage" class="error-message" style="display: none;"></div>
@@ -460,7 +460,7 @@
                     <label for="nicknameInput">Seu nome</label>
                     <input type="text" id="nicknameInput" placeholder="Digite seu nome" required>
                 </div>
-                <button type="submit" class="btn btn-primary">Entrar no webinÃ¡rio</button>
+                <button type="submit" class="btn btn-primary">Entrar no webinário</button>
             </form>
         </div>
     </div>
@@ -480,17 +480,17 @@
             <div class="slides-area">
                 <div class="slides-container">
                     <canvas id="pdfCanvas" style="display: none;"></canvas>
-                    <div id="waitingPlaceholder" class="waiting-message">O webinÃ¡rio comeÃ§arÃ¡ em breve</div>
+                    <div id="waitingPlaceholder" class="waiting-message">O webinário começará em breve</div>
                     <div id="endedOverlay" class="ended-overlay">
                         <div class="ended-message">
-                            <h2>WebinÃ¡rio Encerrado</h2>
+                            <h2>Webinário Encerrado</h2>
                             <p>Obrigado por participar!</p>
                         </div>
                     </div>
                 </div>
                 <div class="slide-indicator" id="slideIndicator">Slide - / -</div>
                 <div id="liveKitNotice" class="livekit-notice" style="display: none;">
-                    â ï¸ LiveKit nÃ£o configurado. VÃ­deo do apresentador nÃ£o serÃ¡ exibido.
+                    â ï¸ LiveKit não configurado. Vídeo do apresentador não será exibido.
                 </div>
                 <div class="video-preview" id="videoPreview" style="display: none;">
                     <video id="remoteVideo" autoplay playsinline></video>
@@ -500,10 +500,10 @@
             <div class="chat-area">
                 <div class="chat-header">Chat</div>
                 <div class="chat-messages" id="chatMessages">
-                    <div class="empty-chat">Envie uma mensagem para comeÃ§ar a conversar</div>
+                    <div class="empty-chat">Envie uma mensagem para começar a conversar</div>
                 </div>
                 <div class="chat-input-area">
-                    <div class="chat-input-hint">SÃ³ o apresentador vÃª</div>
+                    <div class="chat-input-hint">Só o apresentador vê</div>
                     <div class="chat-input-box">
                         <input type="text" class="chat-input" id="chatInput" placeholder="Sua mensagem...">
                         <button class="btn-send" id="sendBtn">Enviar</button>
@@ -541,13 +541,13 @@
             try {
                 const slug = getRoomSlugFromUrl();
                 if (!slug) {
-                    showError('WebinÃ¡rio nÃ£o encontrado. URL invÃ¡lida.');
+                    showError('Webinário não encontrado. URL inválida.');
                     return;
                 }
 
                 const { data, error } = await sb.from('rooms').select('*').eq('slug', slug).single();
                 if (error || !data) {
-                    showError('WebinÃ¡rio nÃ£o encontrado ou foi encerrado.');
+                    showError('Webinário não encontrado ou foi encerrado.');
                     return;
                 }
 
@@ -555,7 +555,7 @@
                 document.getElementById('joinTitle').textContent = room.title;
                 document.getElementById('joinSubtitle').textContent = 'Digite seu nome para assistir';
             } catch (error) {
-                showError('Erro ao carregar webinÃ¡rio: ' + error.message);
+                showError('Erro ao carregar webinário: ' + error.message);
             }
         }
 
@@ -579,7 +579,7 @@
                 setupRealtimeListeners();
                 connectToLiveKit();
             } catch (error) {
-                showError('Erro ao entrar no webinÃ¡rio: ' + error.message);
+                showError('Erro ao entrar no webinário: ' + error.message);
             }
         }
 
