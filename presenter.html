@@ -35,11 +35,15 @@
         }
 
         .create-room-screen {
-            display: flex;
+            display: none;
             align-items: center;
             justify-content: center;
             height: 100vh;
             background: linear-gradient(135deg, #0f1117 0%, #1a0033 100%);
+        }
+
+        .create-room-screen.active {
+            display: flex;
         }
 
         .create-room-container {
