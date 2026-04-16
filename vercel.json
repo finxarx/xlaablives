@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/presenter",
+      "destination": "/presenter.html"
+    },
+    {
+      "source": "/assistir",
+      "destination": "/viewer.html"
+    }
+  ]
+}
