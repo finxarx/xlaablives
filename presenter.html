@@ -35,6 +35,7 @@
         }
 
         .create-room-screen {
+            position: relative;
             display: none;
             align-items: center;
             justify-content: center;
@@ -621,12 +622,104 @@
             font-size: 0.85rem;
             margin-bottom: 1rem;
         }
-    </style>
+    
+        /* Login Screen */
+        .login-screen {
+            display: none;
+            min-height: 100vh;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        .login-screen.active { display: flex; }
+        .login-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+        }
+        .login-box .logo {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+        .login-box .subtitle {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+        }
+        .login-box input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 1rem;
+            margin-bottom: 12px;
+            outline: none;
+        }
+        .login-box input:focus {
+            border-color: var(--accent);
+        }
+        .login-box .btn-login {
+            width: 100%;
+            padding: 12px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: background 0.2s;
+        }
+        .login-box .btn-login:hover { background: var(--accent-light); }
+        .login-box .toggle-link {
+            color: var(--accent);
+            font-size: 0.85rem;
+            margin-top: 1rem;
+            display: block;
+            cursor: pointer;
+        }
+        .login-box .error-msg {
+            color: var(--danger);
+            font-size: 0.85rem;
+            margin-top: 8px;
+            min-height: 20px;
+        }
+        .login-box .name-field {
+            display: none;
+        }
+        .login-box.signup-mode .name-field {
+            display: block;
+        }
+</style>
 </head>
 <body>
-    <div class="create-room-screen active" id="createRoomScreen">
+    <!-- Login Screen -->
+    <div class="login-screen active" id="loginScreen">
+        <div class="login-box" id="loginBox">
+            <div class="logo">Xlaab</div>
+            <div class="subtitle">Painel do Apresentador</div>
+            <input type="text" id="authName" class="name-field" placeholder="Seu nome completo">
+            <input type="email" id="authEmail" placeholder="Email">
+            <input type="password" id="authPassword" placeholder="Senha">
+            <button class="btn-login" id="authBtn" onclick="handleAuth()">Entrar</button>
+            <div class="error-msg" id="authError"></div>
+            <span class="toggle-link" id="authToggle" onclick="toggleAuthMode()">Ainda nao tem conta? Criar conta</span>
+        </div>
+    </div>
+
+    <div class="create-room-screen" id="createRoomScreen">
         <div class="create-room-container">
             <div class="logo">Xlaablives</div>
+            <button onclick="handleLogout()" style="position:absolute;top:1.5rem;right:1.5rem;background:transparent;border:1px solid var(--border);color:var(--text-dim);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:0.8rem;">Sair</button>
             <h1 class="create-room-title">Crie seu webinário</h1>
             <p class="create-room-subtitle">Comece a transmitir para seus participantes</p>
             <form id="createRoomForm">
@@ -722,7 +815,111 @@
         let LIVEKIT_URL = 'wss://finxarx-org-zidszlxp.livekit.cloud';
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-        let room = null;
+        
+        // Auth state
+        let currentUser = null;
+        let isSignupMode = false;
+
+        // Check if user is already logged in
+        async function checkAuth() {
+            const sb = window.supabaseClient;
+            if (!sb) { setTimeout(checkAuth, 100); return; }
+            const { data: { session } } = await sb.auth.getSession();
+            if (session && session.user) {
+                currentUser = session.user;
+                document.getElementById('loginScreen').classList.remove('active');
+                document.getElementById('createRoomScreen').classList.add('active');
+            } else {
+                document.getElementById('loginScreen').classList.add('active');
+                document.getElementById('createRoomScreen').classList.remove('active');
+                document.getElementById('dashboardScreen').classList.remove('active');
+            }
+        }
+
+        async function handleAuth() {
+            const sb = window.supabaseClient;
+            const email = document.getElementById('authEmail').value.trim();
+            const password = document.getElementById('authPassword').value;
+            const errorEl = document.getElementById('authError');
+            const btn = document.getElementById('authBtn');
+            errorEl.textContent = '';
+
+            if (!email || !password) {
+                errorEl.textContent = 'Preencha email e senha';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = isSignupMode ? 'Criando conta...' : 'Entrando...';
+
+            try {
+                let result;
+                if (isSignupMode) {
+                    const name = document.getElementById('authName').value.trim();
+                    result = await sb.auth.signUp({
+                        email: email,
+                        password: password,
+                        options: { data: { full_name: name } }
+                    });
+                    if (result.error) throw result.error;
+                    if (result.data.user && !result.data.session) {
+                        errorEl.style.color = 'var(--success)';
+                        errorEl.textContent = 'Conta criada! Verifique seu email para confirmar.';
+                        btn.disabled = false;
+                        btn.textContent = 'Criar conta';
+                        return;
+                    }
+                } else {
+                    result = await sb.auth.signInWithPassword({
+                        email: email,
+                        password: password
+                    });
+                    if (result.error) throw result.error;
+                }
+
+                currentUser = result.data.user;
+                document.getElementById('loginScreen').classList.remove('active');
+                document.getElementById('createRoomScreen').classList.add('active');
+            } catch (err) {
+                errorEl.style.color = 'var(--danger)';
+                const msg = err.message || 'Erro ao autenticar';
+                if (msg.includes('Invalid login')) errorEl.textContent = 'Email ou senha incorretos';
+                else if (msg.includes('already registered')) errorEl.textContent = 'Email ja cadastrado';
+                else errorEl.textContent = msg;
+            }
+
+            btn.disabled = false;
+            btn.textContent = isSignupMode ? 'Criar conta' : 'Entrar';
+        }
+
+        function toggleAuthMode() {
+            isSignupMode = !isSignupMode;
+            const box = document.getElementById('loginBox');
+            const btn = document.getElementById('authBtn');
+            const toggle = document.getElementById('authToggle');
+
+            if (isSignupMode) {
+                box.classList.add('signup-mode');
+                btn.textContent = 'Criar conta';
+                toggle.textContent = 'Ja tem conta? Entrar';
+            } else {
+                box.classList.remove('signup-mode');
+                btn.textContent = 'Entrar';
+                toggle.textContent = 'Ainda nao tem conta? Criar conta';
+            }
+            document.getElementById('authError').textContent = '';
+        }
+
+        async function handleLogout() {
+            const sb = window.supabaseClient;
+            await sb.auth.signOut();
+            currentUser = null;
+            document.getElementById('loginScreen').classList.add('active');
+            document.getElementById('createRoomScreen').classList.remove('active');
+            document.getElementById('dashboardScreen').classList.remove('active');
+        }
+
+let room = null;
         let currentPdfDoc = null;
         let currentPage = 1;
         let sb = null;
@@ -736,6 +933,8 @@
 
         function initSupabase() {
             sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            window.supabaseClient = sb;
+            checkAuth();
         }
 
         async function createRoom(title) {
@@ -757,6 +956,7 @@
                         title: title,
                         slug: slug,
                         presenter_key: presenterKey,
+                     presenter_id: currentUser ? currentUser.id : null,
                         status: 'waiting'
                     }).select().single();
                     if (error) throw error;
