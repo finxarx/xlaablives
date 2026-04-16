@@ -746,6 +746,9 @@
                 if (existing && existing.length > 0) {
                     room = existing[0];
                     console.log('Reusing existing room:', room.id, room.slug);
+                // Reset room status and clean old participants
+                await sb.from('rooms').update({ status: 'waiting' }).eq('id', room.id);
+                await sb.from('participants').update({ is_active: false }).eq('room_id', room.id);
                 } else {
                     const slug = Math.random().toString(36).substring(2, 10);
                     const presenterKey = Math.random().toString(36).substring(2, 10);
