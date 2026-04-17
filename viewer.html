@@ -8,12 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/livekit-client@2/dist/livekit-client.umd.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
             --bg: #0f1117;
             --surface: #1a1d27;
@@ -26,14 +21,12 @@
             --success: #31a24c;
             --danger: #da3633;
         }
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
             background: var(--bg);
             color: var(--text);
             overflow: hidden;
         }
-
         .join-screen {
             display: none;
             align-items: center;
@@ -41,17 +34,12 @@
             height: 100vh;
             background: linear-gradient(135deg, #0f1117 0%, #1a0033 100%);
         }
-
-        .join-screen.active {
-            display: flex;
-        }
-
+        .join-screen.active { display: flex; }
         .join-container {
             text-align: center;
             max-width: 500px;
             width: 90%;
         }
-
         .logo {
             font-size: 3.5rem;
             font-weight: 900;
@@ -62,23 +50,17 @@
             margin-bottom: 2rem;
             letter-spacing: -2px;
         }
-
         .join-title {
             font-size: 2rem;
             margin-bottom: 1rem;
             color: var(--text);
         }
-
         .join-subtitle {
             color: var(--text-dim);
             margin-bottom: 3rem;
             font-size: 1.1rem;
         }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
+        .form-group { margin-bottom: 1.5rem; }
         .form-group label {
             display: block;
             margin-bottom: 0.5rem;
@@ -86,7 +68,6 @@
             font-size: 0.95rem;
             font-weight: 500;
         }
-
         .form-group input {
             width: 100%;
             padding: 0.875rem 1.25rem;
@@ -97,14 +78,12 @@
             font-size: 1rem;
             transition: all 0.3s ease;
         }
-
         .form-group input:focus {
             outline: none;
             border-color: var(--accent);
             background: var(--surface-light);
             box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15);
         }
-
         .btn {
             padding: 0.875rem 2rem;
             border: none;
@@ -115,18 +94,15 @@
             transition: all 0.3s ease;
             display: inline-block;
         }
-
         .btn-primary {
             background: linear-gradient(135deg, #6c5ce7 0%, #a78bfa 100%);
             color: white;
             width: 100%;
         }
-
         .btn-primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 30px rgba(108, 92, 231, 0.4);
         }
-
         .error-message {
             padding: 1rem;
             background: rgba(218, 54, 51, 0.15);
@@ -136,17 +112,12 @@
             text-align: center;
             margin-bottom: 1rem;
         }
-
         .webinar-screen {
             display: none;
             flex-direction: column;
             height: 100vh;
         }
-
-        .webinar-screen.active {
-            display: flex;
-        }
-
+        .webinar-screen.active { display: flex; }
         .top-bar {
             display: flex;
             align-items: center;
@@ -156,13 +127,11 @@
             border-bottom: 1px solid var(--border);
             height: 70px;
         }
-
         .top-bar-left {
             display: flex;
             align-items: center;
             gap: 2rem;
         }
-
         .top-bar-logo {
             font-size: 1.5rem;
             font-weight: 900;
@@ -171,18 +140,15 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
-
         .room-info {
             display: flex;
             align-items: center;
             gap: 1.5rem;
         }
-
         .room-title {
             font-size: 1.25rem;
             font-weight: 600;
         }
-
         .status-badge {
             padding: 0.5rem 1rem;
             border-radius: 2rem;
@@ -191,22 +157,9 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-
-        .status-badge.waiting {
-            background: rgba(108, 92, 231, 0.2);
-            color: #a78bfa;
-        }
-
-        .status-badge.live {
-            background: rgba(49, 162, 76, 0.2);
-            color: #31a24c;
-        }
-
-        .status-badge.ended {
-            background: rgba(218, 54, 51, 0.2);
-            color: #da3633;
-        }
-
+        .status-badge.waiting { background: rgba(108, 92, 231, 0.2); color: #a78bfa; }
+        .status-badge.live { background: rgba(49, 162, 76, 0.2); color: #31a24c; }
+        .status-badge.ended { background: rgba(218, 54, 51, 0.2); color: #da3633; }
         .main-content {
             display: flex;
             flex: 1;
@@ -214,7 +167,6 @@
             padding: 1.5rem;
             overflow: hidden;
         }
-
         .slides-area {
             flex: 1;
             display: flex;
@@ -226,7 +178,6 @@
             padding: 1.5rem;
             position: relative;
         }
-
         .slides-container {
             flex: 1;
             display: flex;
@@ -236,19 +187,12 @@
             border-radius: 0.5rem;
             overflow: hidden;
         }
-
-        #pdfCanvas {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-        }
-
+        #pdfCanvas { max-width: 100%; max-height: 100%; object-fit: contain; }
         .waiting-message {
             text-align: center;
             color: var(--text-dim);
             font-size: 1.1rem;
         }
-
         .slide-indicator {
             padding: 0.75rem 1rem;
             background: var(--surface-light);
@@ -257,7 +201,6 @@
             font-size: 0.9rem;
             text-align: center;
         }
-
         .video-preview {
             position: absolute;
             top: 1.5rem;
@@ -270,13 +213,7 @@
             overflow: hidden;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
-
-        #remoteVideo {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
+        #remoteVideo { width: 100%; height: 100%; object-fit: cover; }
         .chat-area {
             width: 360px;
             display: flex;
@@ -286,14 +223,12 @@
             border-radius: 0.75rem;
             overflow: hidden;
         }
-
         .chat-header {
             padding: 1rem;
             border-bottom: 1px solid var(--border);
             font-weight: 600;
             color: var(--text);
         }
-
         .chat-messages {
             flex: 1;
             overflow-y: auto;
@@ -302,43 +237,36 @@
             flex-direction: column;
             gap: 0.75rem;
         }
-
         .chat-message {
             padding: 0.75rem;
             background: var(--surface-light);
             border-radius: 0.5rem;
             border-left: 2px solid var(--accent);
         }
-
         .chat-nickname {
             color: var(--accent);
             font-weight: 600;
             font-size: 0.85rem;
             margin-bottom: 0.25rem;
         }
-
         .chat-text {
             color: var(--text);
             font-size: 0.9rem;
             word-break: break-word;
         }
-
         .chat-input-area {
             padding: 1rem;
             border-top: 1px solid var(--border);
         }
-
         .chat-input-hint {
             font-size: 0.75rem;
             color: var(--text-dim);
             margin-bottom: 0.5rem;
         }
-
         .chat-input-box {
             display: flex;
             gap: 0.5rem;
         }
-
         .chat-input {
             flex: 1;
             padding: 0.5rem 0.75rem;
@@ -349,12 +277,7 @@
             font-size: 0.9rem;
             transition: all 0.2s ease;
         }
-
-        .chat-input:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
-
+        .chat-input:focus { outline: none; border-color: var(--accent); }
         .btn-send {
             padding: 0.5rem 1rem;
             background: var(--accent);
@@ -365,16 +288,8 @@
             font-weight: 600;
             transition: all 0.2s ease;
         }
-
-        .btn-send:hover {
-            background: var(--accent-light);
-        }
-
-        .btn-send:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
+        .btn-send:hover { background: var(--accent-light); }
+        .btn-send:disabled { opacity: 0.5; cursor: not-allowed; }
         .empty-chat {
             display: flex;
             align-items: center;
@@ -384,31 +299,14 @@
             text-align: center;
             padding: 2rem;
         }
-
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--text-dim);
-        }
-
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
         .ended-overlay {
             display: none;
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0, 0, 0, 0.8);
             backdrop-filter: blur(4px);
             z-index: 100;
@@ -416,11 +314,7 @@
             justify-content: center;
             border-radius: 0.5rem;
         }
-
-        .ended-overlay.active {
-            display: flex;
-        }
-
+        .ended-overlay.active { display: flex; }
         .ended-message {
             background: var(--surface);
             border: 1px solid var(--border);
@@ -429,17 +323,8 @@
             text-align: center;
             max-width: 400px;
         }
-
-        .ended-message h2 {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-            color: var(--text);
-        }
-
-        .ended-message p {
-            color: var(--text-dim);
-        }
-
+        .ended-message h2 { font-size: 1.5rem; margin-bottom: 1rem; color: var(--text); }
+        .ended-message p { color: var(--text-dim); }
         .livekit-notice {
             padding: 0.75rem;
             background: rgba(255, 193, 7, 0.15);
@@ -448,32 +333,13 @@
             color: #ffc107;
             font-size: 0.75rem;
         }
-    
-        /* Mobile Responsive */
         @media (max-width: 768px) {
-            .webinar-screen {
-                flex-direction: column;
-            }
-            .main-content {
-                flex-direction: column;
-            }
-            .chat-panel, .chat-sidebar {
-                width: 100%;
-                height: 300px;
-                max-height: 300px;
-            }
-            .slide-viewer, .video-container {
-                width: 100%;
-                min-height: 200px;
-            }
-            .header {
-                flex-wrap: wrap;
-                gap: 8px;
-                padding: 8px;
-            }
-            .header h1, .logo {
-                font-size: 1.2rem;
-            }
+            .webinar-screen { flex-direction: column; }
+            .main-content { flex-direction: column; }
+            .chat-area { width: 100%; height: 300px; max-height: 300px; }
+            .slides-area { min-height: 200px; }
+            .header { flex-wrap: wrap; gap: 8px; padding: 8px; }
+            .header h1, .logo { font-size: 1.2rem; }
         }
         .btn-leave {
             background: var(--danger);
@@ -486,9 +352,7 @@
             font-weight: 500;
             transition: opacity 0.2s;
         }
-        .btn-leave:hover {
-            opacity: 0.85;
-        }
+        .btn-leave:hover { opacity: 0.85; }
         .top-bar {
             display: flex;
             align-items: center;
@@ -497,17 +361,16 @@
             background: var(--surface);
             border-bottom: 1px solid var(--border);
         }
-        </style>
+    </style>
 </head>
 <body>
+
     <div class="join-screen active" id="joinScreen">
         <div class="join-container">
             <div class="logo">Xlaablives</div>
             <h1 class="join-title" id="joinTitle">Entrar no webinário</h1>
             <p class="join-subtitle" id="joinSubtitle">Digite seu nome para participar</p>
-
             <div id="errorMessage" class="error-message" style="display: none;"></div>
-
             <form id="joinForm">
                 <div class="form-group">
                     <label for="nicknameInput">Seu nome</label>
@@ -544,7 +407,7 @@
                 </div>
                 <div class="slide-indicator" id="slideIndicator">Slide - / -</div>
                 <div id="liveKitNotice" class="livekit-notice" style="display: none;">
-                    â ï¸ LiveKit não configurado. Vídeo do apresentador não será exibido.
+                    ⚠️ LiveKit não configurado. Vídeo do apresentador não será exibido.
                 </div>
                 <div class="video-preview" id="videoPreview" style="display: none;">
                     <video id="remoteVideo" autoplay playsinline></video>
@@ -557,7 +420,7 @@
                     <div class="empty-chat">Envie uma mensagem para começar a conversar</div>
                 </div>
                 <div class="chat-input-area">
-                    <div class="chat-input-hint">Só o apresentador vê</div>
+                    <div class="chat-input-hint">Chat privado com o apresentador</div>
                     <div class="chat-input-box">
                         <input type="text" class="chat-input" id="chatInput" placeholder="Sua mensagem...">
                         <button class="btn-send" id="sendBtn">Enviar</button>
@@ -571,6 +434,7 @@
         const SUPABASE_URL = 'https://nvnzyupuecyeepxtiltt.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im52bnp5dXB1ZWN5ZWVweHRpbHR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5ODU3MzEsImV4cCI6MjA5MTU2MTczMX0.xsWsvlR1K66kDtJFtzIKzkpZ5sKa-iwDtL4uIInsif4';
         let LIVEKIT_URL = 'wss://finxarx-org-zidszlxp.livekit.cloud';
+
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
         let room = null;
@@ -595,14 +459,12 @@
         async function loadRoom() {
             const slug = getRoomSlugFromUrl();
             if (!slug) {
-                showError('URL inv\u00e1lida. Par\u00e2metro "sala" n\u00e3o encontrado.');
+                showError('URL inválida. Parâmetro "sala" não encontrado.');
                 return;
             }
-            
-            // Try by slug first
+
             let { data, error } = await sb.from('rooms').select('*').eq('slug', slug).single();
-            
-            // If not found by slug, try by title
+
             if (error || !data) {
                 const titleResult = await sb.from('rooms').select('*').eq('title', slug).order('created_at', { ascending: false }).limit(1);
                 if (!titleResult.error && titleResult.data && titleResult.data.length > 0) {
@@ -610,14 +472,14 @@
                     error = null;
                 }
             }
-            
+
             if (error || !data) {
-                showError('Webin\u00e1rio n\u00e3o encontrado. Verifique o link.');
+                showError('Webinário não encontrado. Verifique o link.');
                 return;
             }
-            
+
             room = data;
-            document.getElementById('join-screen').style.display = 'flex';
+            document.getElementById('joinScreen').style.display = 'flex';
             updateStatusBadge();
         }
 
@@ -629,23 +491,48 @@
 
         async function joinWebinar(nickname) {
             if (!room) {
-                alert('Sala n\u00e3o encontrada. Recarregue a p\u00e1gina.');
+                alert('Sala não encontrada. Recarregue a página.');
                 return;
             }
+
             try {
                 const { data: participantData, error } = await sb.from('participants').insert({
                     room_id: room.id,
                     nickname: nickname
-                }).select().single()
+                }).select().single();
+
                 if (error) throw error;
                 participant = participantData;
-                
+
+                // Notify presenter via broadcast
+                const broadcastChannel = sb.channel('room-' + room.id);
+                broadcastChannel.subscribe((status) => {
+                    if (status === 'SUBSCRIBED') {
+                        broadcastChannel.send({ type: 'broadcast', event: 'participant_joined', payload: {} });
+                    }
+                });
+
                 showWebinarScreen();
                 setupRealtimeListeners();
                 connectToLiveKit();
+
+                // Poll for new chat messages and presenter responses every 5 seconds
+                setInterval(async () => {
+                    if (!room || !participant) return;
+                    try {
+                        const { data } = await sb.from('chat_messages')
+                            .select('*')
+                            .eq('room_id', room.id)
+                            .order('created_at', { ascending: true });
+                        if (data) {
+                            data.forEach(msg => addChatMessage(msg));
+                        }
+                    } catch(e) { console.error('Chat poll error:', e); }
+                }, 5000);
+
             } catch (err) {
                 console.error('Erro ao entrar:', err);
-                alert('Erro ao entrar no webin\u00e1rio. Tente novamente.');
+                alert('Erro ao entrar no webinário. Tente novamente.');
             }
         }
 
@@ -715,18 +602,16 @@
         }
 
         function setupRealtimeListeners() {
-            // Remove existing channels to avoid duplicate subscription errors
-            if (roomChannel) {
-                sb.removeChannel(roomChannel);
-                roomChannel = null;
-            }
-            if (chatChannel) {
-                sb.removeChannel(chatChannel);
-                chatChannel = null;
-            }
+            if (roomChannel) { sb.removeChannel(roomChannel); roomChannel = null; }
+            if (chatChannel) { sb.removeChannel(chatChannel); chatChannel = null; }
 
             roomChannel = sb.channel('room-changes-' + room.id);
-            roomChannel.on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rooms', filter: 'id=eq.' + room.id }, (payload) => {
+            roomChannel.on('postgres_changes', {
+                event: 'UPDATE',
+                schema: 'public',
+                table: 'rooms',
+                filter: 'id=eq.' + room.id
+            }, (payload) => {
                 room = payload.new;
                 updateStatusBadge();
                 if (payload.new.current_slide && currentPage !== payload.new.current_slide) {
@@ -740,21 +625,28 @@
             roomChannel.subscribe();
 
             chatChannel = sb.channel('chat-changes-' + room.id);
-            chatChannel.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: 'room_id=eq.' + room.id }, (payload) => {
+            chatChannel.on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'chat_messages',
+                filter: 'room_id=eq.' + room.id
+            }, (payload) => {
                 addChatMessage(payload.new);
             });
             chatChannel.subscribe();
         }
 
         function addChatMessage(msg) {
-            // Privacidade: mostrar apenas mensagens proprias e do apresentador
-            if (msg.participant_id && participant && msg.participant_id !== participant.id) return;
             const container = document.getElementById('chatMessages');
+            // Skip duplicates
+            if (msg.id && container.querySelector('[data-msg-id="' + msg.id + '"]')) return;
+            // Clear empty state
             if (container.querySelector('.empty-chat')) {
                 container.innerHTML = '';
             }
             const div = document.createElement('div');
             div.className = 'chat-message';
+            if (msg.id) div.setAttribute('data-msg-id', msg.id);
             div.innerHTML = `<div class="chat-nickname">${escapeHtml(msg.nickname)}</div><div class="chat-text">${escapeHtml(msg.message)}</div>`;
             container.appendChild(div);
             container.scrollTop = container.scrollHeight;
@@ -795,7 +687,11 @@
                 const response = await fetch(SUPABASE_URL + '/functions/v1/livekit-token', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ roomName: room.id, participantName: participant.nickname, isPresenter: false })
+                    body: JSON.stringify({
+                        roomName: room.id,
+                        participantName: participant.nickname,
+                        isPresenter: false
+                    })
                 });
                 const { token, error } = await response.json();
                 if (error) throw new Error(error);
@@ -803,7 +699,7 @@
                 const { LivekitClient } = window;
                 liveKitRoom = new LivekitClient.Room();
 
-                liveKitRoom.on(LivekitClient.RoomEvent.TrackSubscribed, (track, publication, participant) => {
+                liveKitRoom.on(LivekitClient.RoomEvent.TrackSubscribed, (track, publication, remoteParticipant) => {
                     if (track.kind === 'video') {
                         const video = document.getElementById('remoteVideo');
                         video.srcObject = new MediaStream([track.mediaStreamTrack]);
@@ -824,36 +720,29 @@
 
         async function leaveWebinar() {
             try {
-                // Disconnect from LiveKit
-                if (window.livekitRoom) {
-                    window.livekitRoom.disconnect();
-                    window.livekitRoom = null;
+                if (liveKitRoom) {
+                    liveKitRoom.disconnect();
+                    liveKitRoom = null;
                 }
 
-                // Mark participant as inactive
                 if (participant && participant.id) {
                     await sb.from('participants').update({ is_active: false }).eq('id', participant.id);
                 }
 
-                // Remove realtime channels
                 if (roomChannel) { sb.removeChannel(roomChannel); roomChannel = null; }
                 if (chatChannel) { sb.removeChannel(chatChannel); chatChannel = null; }
 
-                // Clear video
                 const videoContainer = document.getElementById('presenterVideo');
                 if (videoContainer) videoContainer.innerHTML = '';
 
-                // Return to join screen
                 document.getElementById('webinarScreen').classList.remove('active');
-                document.getElementById('join-screen').classList.add('active');
+                document.getElementById('joinScreen').classList.add('active');
 
-                // Reset participant
                 participant = null;
             } catch (err) {
                 console.error('Erro ao sair:', err);
-                // Force return to join screen even on error
                 document.getElementById('webinarScreen').classList.remove('active');
-                document.getElementById('join-screen').classList.add('active');
+                document.getElementById('joinScreen').classList.add('active');
                 participant = null;
             }
         }
@@ -874,9 +763,7 @@
 
         document.getElementById('sendBtn').addEventListener('click', sendChatMessage);
         document.getElementById('chatInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendChatMessage();
-            }
+            if (e.key === 'Enter') { sendChatMessage(); }
         });
 
         initSupabase();

@@ -1307,6 +1307,7 @@
         });
 
         async function logout() {
+            cleanupRealtimeChannels();
             await sb.auth.signOut();
             currentUser = null;
             room = null;
@@ -1345,6 +1346,26 @@
                 if (!data || data.length === 0) {
                     listEl.innerHTML = '<div class="webinar-list-empty">Nenhum webinario encontrado. Crie o seu primeiro!</div>';
                     return;
+                }
+
+                // Auto-expire old webinars: if status is 'waiting' or 'live' and older than 12 hours, mark as ended
+                const now = Date.now();
+                const TWELVE_HOURS = 12 * 60 * 60 * 1000;
+                const expirePromises = [];
+                data.forEach(w => {
+                    if ((w.status === 'waiting' || w.status === 'live') && w.created_at) {
+                        const age = now - new Date(w.created_at).getTime();
+                        if (age > TWELVE_HOURS) {
+                            w.status = 'ended';
+                            expirePromises.push(
+                                sb.from('rooms').update({ status: 'ended' }).eq('id', w.id)
+                            );
+                        }
+                    }
+                });
+                // Fire-and-forget the DB updates
+                if (expirePromises.length > 0) {
+                    Promise.all(expirePromises).catch(e => console.error('Error auto-expiring webinars:', e));
                 }
 
                 listEl.innerHTML = '';
@@ -1599,26 +1620,103 @@
         });
 
         // ========== REALTIME / CHAT / PARTICIPANTS ==========
+        let participantsChannel = null;
+        let chatChannel = null;
+        let chatPollInterval = null;
+        let participantsPollInterval = null;
+        let lastChatTimestamp = null;
+
+        function cleanupRealtimeChannels() {
+            if (roomChannel) { try { sb.removeChannel(roomChannel); } catch(e){} roomChannel = null; }
+            if (participantsChannel) { try { sb.removeChannel(participantsChannel); } catch(e){} participantsChannel = null; }
+            if (chatChannel) { try { sb.removeChannel(chatChannel); } catch(e){} chatChannel = null; }
+            if (chatPollInterval) { clearInterval(chatPollInterval); chatPollInterval = null; }
+            if (participantsPollInterval) { clearInterval(participantsPollInterval); participantsPollInterval = null; }
+        }
+
         function setupRealtimeListeners() {
+            // Clean up any existing channels first
+            cleanupRealtimeChannels();
+
+            // Broadcast channel for instant participant join notifications
             roomChannel = sb.channel('room-' + room.id);
-            roomChannel.on('broadcast', { event: 'participant_joined' }, () => { updateViewerCount(); });
-            roomChannel.subscribe();
+            roomChannel.on('broadcast', { event: 'participant_joined' }, () => { updateViewerCount(); loadParticipants(); });
+            roomChannel.subscribe((status) => {
+                console.log('[Realtime] room broadcast channel:', status);
+            });
 
-            sb.channel('participants-' + room.id)
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'participants' }, () => {
-                    updateViewerCount();
-                    loadParticipants();
-                }).subscribe();
+            // Participants postgres_changes with filter
+            participantsChannel = sb.channel('participants-' + room.id);
+            participantsChannel.on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'participants',
+                filter: 'room_id=eq.' + room.id
+            }, () => {
+                updateViewerCount();
+                loadParticipants();
+            });
+            participantsChannel.subscribe((status) => {
+                console.log('[Realtime] participants channel:', status);
+            });
 
-            sb.channel('chat-' + room.id)
-                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, (payload) => {
-                    if (payload.new.room_id === room.id) addChatMessage(payload.new);
-                }).subscribe();
+            // Chat postgres_changes with filter
+            chatChannel = sb.channel('chat-' + room.id);
+            chatChannel.on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'chat_messages',
+                filter: 'room_id=eq.' + room.id
+            }, (payload) => {
+                addChatMessage(payload.new);
+            });
+            chatChannel.subscribe((status) => {
+                console.log('[Realtime] chat channel:', status);
+            });
 
-            // Load existing data
+            // Load existing data immediately
             loadChatHistory();
             loadParticipants();
             updateViewerCount();
+
+            // POLLING FALLBACK: refresh chat and participants every 5 seconds
+            // This ensures data shows even if Realtime subscription fails silently
+            chatPollInterval = setInterval(() => { pollNewChatMessages(); }, 5000);
+            participantsPollInterval = setInterval(() => { loadParticipants(); updateViewerCount(); }, 8000);
+        }
+
+        async function pollNewChatMessages() {
+            if (!room) return;
+            try {
+                let query = sb.from('chat_messages')
+                    .select('*')
+                    .eq('room_id', room.id)
+                    .order('created_at', { ascending: true });
+
+                if (lastChatTimestamp) {
+                    query = query.gt('created_at', lastChatTimestamp);
+                }
+
+                const { data, error } = await query;
+                if (error) throw error;
+                if (data && data.length > 0) {
+                    // Only add messages not already displayed
+                    const container = document.getElementById('chatMessages');
+                    const existingCount = container.querySelectorAll('.chat-message').length;
+                    if (!lastChatTimestamp) {
+                        // First poll - load all if container is empty
+                        if (existingCount === 0) {
+                            data.forEach(msg => addChatMessage(msg));
+                        }
+                    } else {
+                        // Subsequent polls - add only new messages
+                        data.forEach(msg => addChatMessage(msg));
+                    }
+                    lastChatTimestamp = data[data.length - 1].created_at;
+                }
+            } catch (e) {
+                console.error('Error polling chat:', e);
+            }
         }
 
         async function loadChatHistory() {
@@ -1634,7 +1732,11 @@
                 container.innerHTML = '';
                 if (data && data.length > 0) {
                     data.forEach(msg => addChatMessage(msg));
+                    lastChatTimestamp = data[data.length - 1].created_at;
+                } else {
+                    container.innerHTML = '<div style="color:var(--text-dim);text-align:center;padding:2rem;">Nenhuma mensagem ainda</div>';
                 }
+                console.log('[Chat] Loaded', (data||[]).length, 'messages for room', room.id);
             } catch (e) {
                 console.error('Error loading chat history:', e);
             }
@@ -1674,23 +1776,19 @@
         async function loadParticipants() {
             if (!room) return;
             try {
-                // Try ordering by joined_at first, fall back to created_at
-                let result = await sb.from('participants')
+                const { data, error } = await sb.from('participants')
                     .select('*')
                     .eq('room_id', room.id)
                     .eq('is_active', true)
                     .order('joined_at', { ascending: false });
 
-                // If joined_at column doesn't exist, the query will error - fall back
-                if (result.error) {
-                    result = await sb.from('participants')
-                        .select('*')
-                        .eq('room_id', room.id)
-                        .eq('is_active', true)
-                        .order('created_at', { ascending: false });
+                if (error) {
+                    console.error('Error querying participants:', error);
+                    return;
                 }
 
-                const data = result.data;
+                console.log('[Participants] Loaded', (data||[]).length, 'active for room', room.id);
+
                 const list = document.getElementById('participantsList');
                 list.innerHTML = '';
 
@@ -1705,6 +1803,8 @@
                     div.innerHTML = `<div class="participant-dot"></div><div class="participant-name">${escapeHtml(p.nickname)}</div>`;
                     list.appendChild(div);
                 });
+
+                document.getElementById('participantCount').textContent = data.length;
             } catch (e) {
                 console.error('Error loading participants:', e);
             }
@@ -1712,9 +1812,16 @@
 
         function addChatMessage(msg) {
             const container = document.getElementById('chatMessages');
+            // Skip if this message is already displayed (dedup by id)
+            if (msg.id && container.querySelector('[data-msg-id="' + msg.id + '"]')) return;
+            // Clear empty state placeholder
+            const emptyState = container.querySelector('[style*="text-align:center"]');
+            if (emptyState) emptyState.remove();
+
             const div = document.createElement('div');
             const isPresenter = msg.nickname === 'Apresentador';
             div.className = 'chat-message' + (isPresenter ? ' presenter-msg' : '');
+            if (msg.id) div.setAttribute('data-msg-id', msg.id);
             div.innerHTML = `<div class="chat-nickname">${escapeHtml(msg.nickname)}</div><div class="chat-text">${escapeHtml(msg.message)}</div>`;
             container.appendChild(div);
             container.scrollTop = container.scrollHeight;
@@ -1798,6 +1905,8 @@
 
         async function endWebinar() {
             await sb.from('rooms').update({ status: 'ended' }).eq('id', room.id);
+            // Mark all participants as inactive
+            await sb.from('participants').update({ is_active: false }).eq('room_id', room.id);
             room.status = 'ended';
             updateStatusBadge();
             document.getElementById('endBtn').style.display = 'none';
