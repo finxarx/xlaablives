@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xlaablives - Assistir Webinário</title>
+    <title>Xlaablives - Assistir WebinÃ¡rio</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/livekit-client@2/dist/livekit-client.umd.min.js"></script>
@@ -212,6 +212,15 @@
             border-radius: 0.75rem;
             overflow: hidden;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            cursor: grab;
+            z-index: 50;
+            user-select: none;
+            touch-action: none;
+            transition: box-shadow 0.2s;
+        }
+        .video-preview.dragging {
+            cursor: grabbing;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7);
         }
         #remoteVideo { width: 100%; height: 100%; object-fit: cover; }
         .chat-area {
@@ -368,7 +377,7 @@
     <div class="join-screen active" id="joinScreen">
         <div class="join-container">
             <div class="logo">Xlaablives</div>
-            <h1 class="join-title" id="joinTitle">Entrar no webinário</h1>
+            <h1 class="join-title" id="joinTitle">Entrar no webinÃ¡rio</h1>
             <p class="join-subtitle" id="joinSubtitle">Digite seu nome para participar</p>
             <div id="errorMessage" class="error-message" style="display: none;"></div>
             <form id="joinForm">
@@ -376,7 +385,7 @@
                     <label for="nicknameInput">Seu nome</label>
                     <input type="text" id="nicknameInput" placeholder="Digite seu nome" required>
                 </div>
-                <button type="submit" class="btn btn-primary">Entrar no webinário</button>
+                <button type="submit" class="btn btn-primary">Entrar no webinÃ¡rio</button>
             </form>
         </div>
     </div>
@@ -397,17 +406,17 @@
             <div class="slides-area">
                 <div class="slides-container">
                     <canvas id="pdfCanvas" style="display: none;"></canvas>
-                    <div id="waitingPlaceholder" class="waiting-message">O webinário começará em breve</div>
+                    <div id="waitingPlaceholder" class="waiting-message">O webinÃ¡rio comeÃ§arÃ¡ em breve</div>
                     <div id="endedOverlay" class="ended-overlay">
                         <div class="ended-message">
-                            <h2>Webinário Encerrado</h2>
+                            <h2>WebinÃ¡rio Encerrado</h2>
                             <p>Obrigado por participar!</p>
                         </div>
                     </div>
                 </div>
                 <div class="slide-indicator" id="slideIndicator">Slide - / -</div>
                 <div id="liveKitNotice" class="livekit-notice" style="display: none;">
-                    ⚠️ LiveKit não configurado. Vídeo do apresentador não será exibido.
+                    â ï¸ LiveKit nÃ£o configurado. VÃ­deo do apresentador nÃ£o serÃ¡ exibido.
                 </div>
                 <div class="video-preview" id="videoPreview" style="display: none;">
                     <video id="remoteVideo" autoplay playsinline></video>
@@ -417,7 +426,7 @@
             <div class="chat-area">
                 <div class="chat-header">Chat</div>
                 <div class="chat-messages" id="chatMessages">
-                    <div class="empty-chat">Envie uma mensagem para começar a conversar</div>
+                    <div class="empty-chat">Envie uma mensagem para comeÃ§ar a conversar</div>
                 </div>
                 <div class="chat-input-area">
                     <div class="chat-input-hint">Chat privado com o apresentador</div>
@@ -459,7 +468,7 @@
         async function loadRoom() {
             const slug = getRoomSlugFromUrl();
             if (!slug) {
-                showError('URL inválida. Parâmetro "sala" não encontrado.');
+                showError('URL invÃ¡lida. ParÃ¢metro "sala" nÃ£o encontrado.');
                 return;
             }
 
@@ -474,7 +483,7 @@
             }
 
             if (error || !data) {
-                showError('Webinário não encontrado. Verifique o link.');
+                showError('WebinÃ¡rio nÃ£o encontrado. Verifique o link.');
                 return;
             }
 
@@ -491,7 +500,7 @@
 
         async function joinWebinar(nickname) {
             if (!room) {
-                alert('Sala não encontrada. Recarregue a página.');
+                alert('Sala nÃ£o encontrada. Recarregue a pÃ¡gina.');
                 return;
             }
 
@@ -532,7 +541,7 @@
 
             } catch (err) {
                 console.error('Erro ao entrar:', err);
-                alert('Erro ao entrar no webinário. Tente novamente.');
+                alert('Erro ao entrar no webinÃ¡rio. Tente novamente.');
             }
         }
 
@@ -768,6 +777,69 @@
 
         initSupabase();
         loadRoom();
+    
+        // ========== DRAGGABLE VIDEO ==========
+        function setupDraggableVideo() {
+            const videoEl = document.getElementById('videoPreview');
+            if (!videoEl) return;
+            let isDragging = false;
+            let startX, startY, initialLeft, initialTop;
+
+            function getPosition() {
+                const rect = videoEl.getBoundingClientRect();
+                const parentRect = videoEl.parentElement.getBoundingClientRect();
+                return {
+                    left: rect.left - parentRect.left,
+                    top: rect.top - parentRect.top
+                };
+            }
+
+            function startDrag(clientX, clientY) {
+                isDragging = true;
+                const pos = getPosition();
+                // Switch from right-positioning to left-positioning
+                videoEl.style.right = 'auto';
+                videoEl.style.left = pos.left + 'px';
+                videoEl.style.top = pos.top + 'px';
+                initialLeft = pos.left;
+                initialTop = pos.top;
+                startX = clientX;
+                startY = clientY;
+                videoEl.classList.add('dragging');
+            }
+
+            function doDrag(clientX, clientY) {
+                if (!isDragging) return;
+                const dx = clientX - startX;
+                const dy = clientY - startY;
+                const parent = videoEl.parentElement;
+                const maxLeft = parent.clientWidth - videoEl.offsetWidth;
+                const maxTop = parent.clientHeight - videoEl.offsetHeight;
+                let newLeft = Math.max(0, Math.min(initialLeft + dx, maxLeft));
+                let newTop = Math.max(0, Math.min(initialTop + dy, maxTop));
+                videoEl.style.left = newLeft + 'px';
+                videoEl.style.top = newTop + 'px';
+            }
+
+            function endDrag() {
+                if (!isDragging) return;
+                isDragging = false;
+                videoEl.classList.remove('dragging');
+            }
+
+            // Mouse events
+            videoEl.addEventListener('mousedown', (e) => { e.preventDefault(); startDrag(e.clientX, e.clientY); });
+            document.addEventListener('mousemove', (e) => { doDrag(e.clientX, e.clientY); });
+            document.addEventListener('mouseup', endDrag);
+
+            // Touch events (mobile)
+            videoEl.addEventListener('touchstart', (e) => { e.preventDefault(); const t = e.touches[0]; startDrag(t.clientX, t.clientY); }, { passive: false });
+            document.addEventListener('touchmove', (e) => { if (isDragging) { const t = e.touches[0]; doDrag(t.clientX, t.clientY); } }, { passive: false });
+            document.addEventListener('touchend', endDrag);
+        }
+
+        // Initialize draggable when DOM is ready
+        setupDraggableVideo();
     </script>
 </body>
 </html>
