@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xlaablives - Painel do Apresentador</title>
+    <title>Xlaab - Painel do Apresentador</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/livekit-client@2/dist/livekit-client.umd.min.js"></script>
@@ -34,22 +34,20 @@
             overflow: hidden;
         }
 
-        .create-room-screen {
-            position: relative;
-            display: none;
+        /* ========== LOGIN SCREEN ========== */
+        .login-screen {
+            display: flex;
             align-items: center;
             justify-content: center;
             height: 100vh;
             background: linear-gradient(135deg, #0f1117 0%, #1a0033 100%);
         }
 
-        .create-room-screen.active {
-            display: flex;
-        }
+        .login-screen.hidden { display: none; }
 
-        .create-room-container {
+        .login-container {
             text-align: center;
-            max-width: 500px;
+            max-width: 420px;
             width: 90%;
         }
 
@@ -64,20 +62,21 @@
             letter-spacing: -2px;
         }
 
-        .create-room-title {
-            font-size: 2rem;
-            margin-bottom: 1rem;
+        .login-title {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
             color: var(--text);
         }
 
-        .create-room-subtitle {
+        .login-subtitle {
             color: var(--text-dim);
-            margin-bottom: 3rem;
-            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            font-size: 1rem;
         }
 
         .form-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.25rem;
+            text-align: left;
         }
 
         .form-group label {
@@ -128,6 +127,301 @@
             box-shadow: 0 10px 30px rgba(108, 92, 231, 0.4);
         }
 
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .auth-toggle {
+            margin-top: 1.5rem;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        .auth-toggle a {
+            color: var(--accent);
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .auth-toggle a:hover {
+            text-decoration: underline;
+        }
+
+        .auth-error {
+            background: rgba(218, 54, 51, 0.15);
+            border: 1px solid rgba(218, 54, 51, 0.4);
+            color: #f85149;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        /* ========== PRESENTER DASHBOARD (new screen) ========== */
+        .presenter-dashboard-screen {
+            display: none;
+            flex-direction: column;
+            height: 100vh;
+            background: var(--bg);
+        }
+
+        .presenter-dashboard-screen.active {
+            display: flex;
+        }
+
+        .pd-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 2rem;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            height: 70px;
+        }
+
+        .pd-header-left {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .pd-logo {
+            font-size: 1.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #6c5ce7 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .pd-greeting {
+            color: var(--text-dim);
+            font-size: 1rem;
+        }
+
+        .pd-greeting strong {
+            color: var(--text);
+        }
+
+        .btn-logout {
+            padding: 0.5rem 1.25rem;
+            background: var(--surface-light);
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            border-radius: 0.4rem;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-logout:hover {
+            background: rgba(218, 54, 51, 0.15);
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        .pd-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .pd-new-webinar {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .btn-new-webinar {
+            padding: 1.25rem 3rem;
+            background: linear-gradient(135deg, #6c5ce7 0%, #a78bfa 100%);
+            color: white;
+            border: none;
+            border-radius: 0.75rem;
+            font-size: 1.15rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-new-webinar:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(108, 92, 231, 0.45);
+        }
+
+        .pd-section {
+            margin-bottom: 2.5rem;
+        }
+
+        .pd-section-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
+
+        .webinar-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .webinar-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.25rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .webinar-item:hover {
+            border-color: var(--accent);
+            background: var(--surface-light);
+        }
+
+        .webinar-item-left {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .webinar-item-title {
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--text);
+        }
+
+        .webinar-item-date {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+        }
+
+        .webinar-item-status {
+            padding: 0.3rem 0.75rem;
+            border-radius: 2rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .webinar-item-status.waiting {
+            background: rgba(108, 92, 231, 0.2);
+            color: #a78bfa;
+        }
+
+        .webinar-item-status.live {
+            background: rgba(49, 162, 76, 0.2);
+            color: #31a24c;
+        }
+
+        .webinar-item-status.ended {
+            background: rgba(218, 54, 51, 0.2);
+            color: #da3633;
+        }
+
+        .webinar-list-empty {
+            color: var(--text-dim);
+            text-align: center;
+            padding: 2rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+        }
+
+        .profile-card {
+            padding: 1.25rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+        }
+
+        .profile-row {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .profile-label {
+            font-weight: 600;
+            color: var(--text-dim);
+            min-width: 60px;
+        }
+
+        .profile-value {
+            color: var(--text);
+        }
+
+        /* ========== CREATE ROOM MODAL ========== */
+        .create-room-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .create-room-modal-overlay.active {
+            display: flex;
+        }
+
+        .create-room-modal {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            padding: 2rem;
+            max-width: 480px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .create-room-modal h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .create-room-modal .btn-cancel {
+            margin-top: 0.75rem;
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--surface-light);
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .create-room-modal .btn-cancel:hover {
+            color: var(--text);
+        }
+
+        /* ========== WEBINAR DASHBOARD (existing, with fixes) ========== */
         .dashboard-screen {
             display: none;
             flex-direction: column;
@@ -212,6 +506,24 @@
         .status-badge.ended {
             background: rgba(218, 54, 51, 0.2);
             color: #da3633;
+        }
+
+        .btn-back-panel {
+            padding: 0.5rem 1rem;
+            background: var(--surface-light);
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            border-radius: 0.4rem;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .btn-back-panel:hover {
+            color: var(--text);
+            border-color: var(--accent);
         }
 
         .main-content {
@@ -459,6 +771,10 @@
             border-left: 2px solid var(--accent);
         }
 
+        .chat-message.presenter-msg {
+            border-left-color: var(--success);
+        }
+
         .chat-nickname {
             color: var(--accent);
             font-weight: 600;
@@ -466,10 +782,53 @@
             margin-bottom: 0.25rem;
         }
 
+        .chat-message.presenter-msg .chat-nickname {
+            color: var(--success);
+        }
+
         .chat-text {
             color: var(--text);
             font-size: 0.9rem;
             word-break: break-word;
+        }
+
+        .chat-input-area {
+            display: flex;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            border-top: 1px solid var(--border);
+            background: var(--surface);
+        }
+
+        .chat-input-area input {
+            flex: 1;
+            padding: 0.6rem 0.75rem;
+            background: var(--surface-light);
+            border: 1px solid var(--border);
+            border-radius: 0.4rem;
+            color: var(--text);
+            font-size: 0.9rem;
+        }
+
+        .chat-input-area input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .chat-input-area button {
+            padding: 0.6rem 1rem;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 0.4rem;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: background 0.2s ease;
+        }
+
+        .chat-input-area button:hover {
+            background: var(--accent-light);
         }
 
         .participants-list {
@@ -511,6 +870,7 @@
             padding: 2rem;
         }
 
+        /* ========== SHARE MODAL ========== */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -622,136 +982,113 @@
             font-size: 0.85rem;
             margin-bottom: 1rem;
         }
-    
-        /* Login Screen */
-        .login-screen {
-            display: none;
-            min-height: 100vh;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-        }
-        .login-screen.active { display: flex; }
-        .login-box {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 2.5rem;
-            width: 100%;
-            max-width: 420px;
-            text-align: center;
-        }
-        .login-box .logo {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: var(--accent);
-            margin-bottom: 0.5rem;
-        }
-        .login-box .subtitle {
-            color: var(--text-dim);
-            font-size: 0.9rem;
-            margin-bottom: 2rem;
-        }
-        .login-box input {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            background: var(--bg);
-            color: var(--text);
-            font-size: 1rem;
-            margin-bottom: 12px;
-            outline: none;
-        }
-        .login-box input:focus {
-            border-color: var(--accent);
-        }
-        .login-box .btn-login {
-            width: 100%;
-            padding: 12px;
-            background: var(--accent);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 8px;
-            transition: background 0.2s;
-        }
-        .login-box .btn-login:hover { background: var(--accent-light); }
-        .login-box .toggle-link {
-            color: var(--accent);
-            font-size: 0.85rem;
-            margin-top: 1rem;
-            display: block;
-            cursor: pointer;
-        }
-        .login-box .error-msg {
-            color: var(--danger);
-            font-size: 0.85rem;
-            margin-top: 8px;
-            min-height: 20px;
-        }
-        .login-box .name-field {
-            display: none;
-        }
-        .login-box.signup-mode .name-field {
-            display: block;
-        }
-</style>
+    </style>
 </head>
 <body>
-    <!-- Login Screen -->
-    <div class="login-screen active" id="loginScreen">
-        <div class="login-box" id="loginBox">
+
+    <!-- ========== LOGIN SCREEN ========== -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-container">
             <div class="logo">Xlaab</div>
-            <div class="subtitle">Painel do Apresentador</div>
-            <input type="text" id="authName" class="name-field" placeholder="Seu nome completo">
-            <input type="email" id="authEmail" placeholder="Email">
-            <input type="password" id="authPassword" placeholder="Senha">
-            <button class="btn-login" id="authBtn" onclick="handleAuth()">Entrar</button>
-            <div class="error-msg" id="authError"></div>
-            <span class="toggle-link" id="authToggle" onclick="toggleAuthMode()">Ainda nao tem conta? Criar conta</span>
+            <h1 class="login-title" id="authTitle">Entrar</h1>
+            <p class="login-subtitle" id="authSubtitle">Acesse o painel do apresentador</p>
+            <div class="auth-error" id="authError"></div>
+            <form id="authForm">
+                <div class="form-group" id="nameGroup" style="display: none;">
+                    <label for="nameInput">Nome</label>
+                    <input type="text" id="nameInput" placeholder="Seu nome completo">
+                </div>
+                <div class="form-group">
+                    <label for="emailInput">E-mail</label>
+                    <input type="email" id="emailInput" placeholder="seu@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="passwordInput">Senha</label>
+                    <input type="password" id="passwordInput" placeholder="Sua senha" required>
+                </div>
+                <button type="submit" class="btn btn-primary" id="authBtn">Entrar</button>
+            </form>
+            <div class="auth-toggle">
+                <span id="authToggleText">Nao tem conta?</span>
+                <a id="authToggleLink" onclick="toggleAuthMode()">Criar conta</a>
+            </div>
         </div>
     </div>
 
-    <div class="create-room-screen" id="createRoomScreen">
-        <div class="create-room-container">
-            <div class="logo">Xlaablives</div>
-            <button onclick="handleLogout()" style="position:absolute;top:1.5rem;right:1.5rem;background:transparent;border:1px solid var(--border);color:var(--text-dim);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:0.8rem;">Sair</button>
-            <h1 class="create-room-title">Crie seu webinário</h1>
-            <p class="create-room-subtitle">Comece a transmitir para seus participantes</p>
+    <!-- ========== PRESENTER DASHBOARD ========== -->
+    <div class="presenter-dashboard-screen" id="presenterDashboardScreen">
+        <div class="pd-header">
+            <div class="pd-header-left">
+                <div class="pd-logo">Xlaab</div>
+                <div class="pd-greeting" id="pdGreeting">Ola</div>
+            </div>
+            <button class="btn-logout" onclick="logout()">Sair</button>
+        </div>
+        <div class="pd-body">
+            <div class="pd-new-webinar">
+                <button class="btn-new-webinar" onclick="showCreateRoomModal()">+ Novo Webinario</button>
+            </div>
+
+            <div class="pd-section">
+                <div class="pd-section-title">Meus Webinarios</div>
+                <div class="webinar-list" id="webinarList">
+                    <div class="webinar-list-empty">Carregando...</div>
+                </div>
+            </div>
+
+            <div class="pd-section">
+                <div class="pd-section-title">Meu Perfil</div>
+                <div class="profile-card">
+                    <div class="profile-row">
+                        <span class="profile-label">Nome:</span>
+                        <span class="profile-value" id="profileName">-</span>
+                    </div>
+                    <div class="profile-row">
+                        <span class="profile-label">E-mail:</span>
+                        <span class="profile-value" id="profileEmail">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== CREATE ROOM MODAL ========== -->
+    <div class="create-room-modal-overlay" id="createRoomModalOverlay">
+        <div class="create-room-modal">
+            <h2>Novo Webinario</h2>
             <form id="createRoomForm">
                 <div class="form-group">
-                    <label for="titleInput">Título do webinário</label>
-                    <input type="text" id="titleInput" placeholder="Ex: Webinário de Inovação 2026" required>
+                    <label for="titleInput">Titulo do webinario</label>
+                    <input type="text" id="titleInput" placeholder="Ex: Webinario de Inovacao 2026" required>
                 </div>
-                <button type="submit" class="btn btn-primary">Criar webinário</button>
+                <button type="submit" class="btn btn-primary">Criar webinario</button>
+                <button type="button" class="btn-cancel" onclick="hideCreateRoomModal()">Cancelar</button>
             </form>
         </div>
     </div>
 
+    <!-- ========== WEBINAR DASHBOARD ========== -->
     <div class="dashboard-screen" id="dashboardScreen">
         <div class="top-bar">
             <div class="top-bar-left">
-                <div class="top-bar-logo">Xlaablives</div>
+                <div class="top-bar-logo">Xlaab</div>
                 <div class="room-info">
                     <div class="room-title" id="topBarTitle">Carregando...</div>
-                    <div class="participant-badge">ð¥ <span class="count" id="participantCount">0</span></div>
+                    <div class="participant-badge">Participantes: <span class="count" id="participantCount">0</span></div>
                     <div class="status-badge waiting" id="statusBadge">Aguardando</div>
                 </div>
             </div>
+            <button class="btn-back-panel" onclick="goBackToPanel()">Voltar ao painel</button>
         </div>
 
         <div class="main-content">
             <div class="slides-area">
                 <div id="liveKitNotice" class="livekit-notice" style="display: none;">
-                    â ï¸ LiveKit não configurado. Vídeo/áudio não funcionarão. Configure LIVEKIT_URL para ativar.
+                    LiveKit nao configurado. Video/audio nao funcionarao. Configure LIVEKIT_URL para ativar.
                 </div>
                 <div class="pdf-upload-zone" id="uploadZone">
                     <div class="upload-content">
-                        <div class="upload-icon">ð</div>
+                        <div class="upload-icon">PDF</div>
                         <div class="upload-text">Arraste seu PDF aqui</div>
                         <div class="upload-hint">ou clique para selecionar</div>
                     </div>
@@ -759,21 +1096,21 @@
                 <canvas id="pdfCanvas" style="display: none;"></canvas>
                 <div class="slide-controls">
                     <div class="slide-nav">
-                        <button class="btn-nav" id="prevSlideBtn">â Anterior</button>
+                        <button class="btn-nav" id="prevSlideBtn">Anterior</button>
                         <div class="slide-counter"><span id="currentSlide">-</span> / <span id="totalSlides">-</span></div>
-                        <button class="btn-nav" id="nextSlideBtn">Próximo â</button>
+                        <button class="btn-nav" id="nextSlideBtn">Proximo</button>
                     </div>
                     <div class="action-buttons">
-                        <button class="btn-action" id="shareBtn">ð Compartilhar link</button>
-                        <button class="btn-action" id="screenShareBtn">ð¥ï¸ Tela</button>
-                        <button class="btn-action" id="micBtn">ðï¸ Mic</button>
-                        <button class="btn-action" id="cameraBtn">ð¹ Câmera</button>
-                        <button class="btn-action" id="goLiveBtn">ð´ Iniciar ao vivo</button>
-                        <button class="btn-action btn-danger" id="endBtn" style="display: none;">â¹ï¸ Encerrar</button>
+                        <button class="btn-action" id="shareBtn">Compartilhar link</button>
+                        <button class="btn-action" id="screenShareBtn">Tela</button>
+                        <button class="btn-action" id="micBtn">Mic</button>
+                        <button class="btn-action" id="cameraBtn">Camera</button>
+                        <button class="btn-action" id="goLiveBtn">Iniciar ao vivo</button>
+                        <button class="btn-action btn-danger" id="endBtn" style="display: none;">Encerrar</button>
                     </div>
                 </div>
                 <div class="video-preview" id="videoPreview" style="display: none;">
-                    <div class="video-status" id="videoStatus">Câmera desligada</div>
+                    <div class="video-status" id="videoStatus">Camera desligada</div>
                     <video id="localVideo" autoplay muted playsinline></video>
                 </div>
             </div>
@@ -785,6 +1122,10 @@
                 </div>
                 <div class="tab-content active" id="chatTab">
                     <div class="chat-messages" id="chatMessages"></div>
+                    <div class="chat-input-area">
+                        <input type="text" id="chatInput" placeholder="Enviar mensagem..." onkeydown="if(event.key==='Enter')sendChatMessage()">
+                        <button onclick="sendChatMessage()">Enviar</button>
+                    </div>
                 </div>
                 <div class="tab-content" id="participantsTab">
                     <div class="participants-list" id="participantsList"></div>
@@ -793,9 +1134,10 @@
         </div>
     </div>
 
+    <!-- ========== SHARE MODAL ========== -->
     <div class="modal-overlay" id="shareModal">
         <div class="modal">
-            <h2 class="modal-title">Compartilhar webinário</h2>
+            <h2 class="modal-title">Compartilhar webinario</h2>
             <div class="modal-content">
                 <p style="margin-bottom: 1rem; color: var(--text-dim);">Compartilhe este link com seus participantes:</p>
                 <div class="url-box">
@@ -810,169 +1152,297 @@
     </div>
 
     <script>
+        // ========== CONFIG ==========
         const SUPABASE_URL = 'https://nvnzyupuecyeepxtiltt.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im52bnp5dXB1ZWN5ZWVweHRpbHR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5ODU3MzEsImV4cCI6MjA5MTU2MTczMX0.xsWsvlR1K66kDtJFtzIKzkpZ5sKa-iwDtL4uIInsif4';
-        let LIVEKIT_URL = 'wss://finxarx-org-zidszlxp.livekit.cloud';
+        const LIVEKIT_URL = 'wss://finxarx-org-zidszlxp.livekit.cloud';
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-        
-        // Auth state
-        let currentUser = null;
-        let isSignupMode = false;
-
-        // Check if user is already logged in
-        async function checkAuth() {
-            const sb = window.supabaseClient;
-            if (!sb) { setTimeout(checkAuth, 100); return; }
-            const { data: { session } } = await sb.auth.getSession();
-            if (session && session.user) {
-                currentUser = session.user;
-                document.getElementById('loginScreen').classList.remove('active');
-                document.getElementById('createRoomScreen').classList.add('active');
-            } else {
-                document.getElementById('loginScreen').classList.add('active');
-                document.getElementById('createRoomScreen').classList.remove('active');
-                document.getElementById('dashboardScreen').classList.remove('active');
-            }
-        }
-
-        async function handleAuth() {
-            const sb = window.supabaseClient;
-            const email = document.getElementById('authEmail').value.trim();
-            const password = document.getElementById('authPassword').value;
-            const errorEl = document.getElementById('authError');
-            const btn = document.getElementById('authBtn');
-            errorEl.textContent = '';
-
-            if (!email || !password) {
-                errorEl.textContent = 'Preencha email e senha';
-                return;
-            }
-
-            btn.disabled = true;
-            btn.textContent = isSignupMode ? 'Criando conta...' : 'Entrando...';
-
-            try {
-                let result;
-                if (isSignupMode) {
-                    const name = document.getElementById('authName').value.trim();
-                    result = await sb.auth.signUp({
-                        email: email,
-                        password: password,
-                        options: { data: { full_name: name } }
-                    });
-                    if (result.error) throw result.error;
-                    if (result.data.user && !result.data.session) {
-                        errorEl.style.color = 'var(--success)';
-                        errorEl.textContent = 'Conta criada! Verifique seu email para confirmar.';
-                        btn.disabled = false;
-                        btn.textContent = 'Criar conta';
-                        return;
-                    }
-                } else {
-                    result = await sb.auth.signInWithPassword({
-                        email: email,
-                        password: password
-                    });
-                    if (result.error) throw result.error;
-                }
-
-                currentUser = result.data.user;
-                document.getElementById('loginScreen').classList.remove('active');
-                document.getElementById('createRoomScreen').classList.add('active');
-            } catch (err) {
-                errorEl.style.color = 'var(--danger)';
-                const msg = err.message || 'Erro ao autenticar';
-                if (msg.includes('Invalid login')) errorEl.textContent = 'Email ou senha incorretos';
-                else if (msg.includes('already registered')) errorEl.textContent = 'Email ja cadastrado';
-                else errorEl.textContent = msg;
-            }
-
-            btn.disabled = false;
-            btn.textContent = isSignupMode ? 'Criar conta' : 'Entrar';
-        }
-
-        function toggleAuthMode() {
-            isSignupMode = !isSignupMode;
-            const box = document.getElementById('loginBox');
-            const btn = document.getElementById('authBtn');
-            const toggle = document.getElementById('authToggle');
-
-            if (isSignupMode) {
-                box.classList.add('signup-mode');
-                btn.textContent = 'Criar conta';
-                toggle.textContent = 'Ja tem conta? Entrar';
-            } else {
-                box.classList.remove('signup-mode');
-                btn.textContent = 'Entrar';
-                toggle.textContent = 'Ainda nao tem conta? Criar conta';
-            }
-            document.getElementById('authError').textContent = '';
-        }
-
-        async function handleLogout() {
-            const sb = window.supabaseClient;
-            await sb.auth.signOut();
-            currentUser = null;
-            document.getElementById('loginScreen').classList.add('active');
-            document.getElementById('createRoomScreen').classList.remove('active');
-            document.getElementById('dashboardScreen').classList.remove('active');
-        }
-
-let room = null;
+        // ========== STATE ==========
+        let room = null;
         let currentPdfDoc = null;
         let currentPage = 1;
         let sb = null;
         let roomChannel = null;
-        let chatChannel = null;
-        let participantChannel = null;
         let localTracks = { video: null, audio: null };
         let liveKitRoom = null;
         let cameraEnabled = false;
         let micEnabled = false;
+        let currentUser = null;
+        let isSignUpMode = false;
 
+        // ========== SUPABASE INIT ==========
         function initSupabase() {
             sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             window.supabaseClient = sb;
             checkAuth();
         }
 
-        async function createRoom(title) {
+        // ========== AUTH ==========
+        async function checkAuth() {
             try {
-                // Check if room with same title already exists
-                let { data: existing } = await sb.from('rooms').select('*').eq('title', title).order('created_at', { ascending: false }).limit(1);
-                
-                if (existing && existing.length > 0) {
-                    room = existing[0];
-                    console.log('Reusing existing room:', room.id, room.slug);
-                // Reset room status and clean old participants
-                await sb.from('rooms').update({ status: 'waiting' }).eq('id', room.id);
-                room.status = 'waiting';
-                await sb.from('participants').update({ is_active: false }).eq('room_id', room.id);
+                const { data: { session } } = await sb.auth.getSession();
+                if (session && session.user) {
+                    currentUser = session.user;
+                    onAuthSuccess();
                 } else {
-                    const slug = Math.random().toString(36).substring(2, 10);
-                    const presenterKey = Math.random().toString(36).substring(2, 10);
-                    const { data, error } = await sb.from('rooms').insert({
-                        title: title,
-                        slug: slug,
-                        presenter_key: presenterKey,
-                     presenter_id: currentUser ? currentUser.id : null,
-                        status: 'waiting'
-                    }).select().single();
+                    showLoginScreen();
+                }
+            } catch (e) {
+                console.error('Auth check error:', e);
+                showLoginScreen();
+            }
+        }
+
+        function showLoginScreen() {
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('presenterDashboardScreen').classList.remove('active');
+            document.getElementById('dashboardScreen').classList.remove('active');
+        }
+
+        function onAuthSuccess() {
+            document.getElementById('loginScreen').classList.add('hidden');
+
+            // Check if we have a saved room in sessionStorage
+            const savedRoomId = sessionStorage.getItem('xlaab_room_id');
+            if (savedRoomId) {
+                loadSavedRoom(savedRoomId);
+            } else {
+                showPresenterDashboard();
+            }
+        }
+
+        async function loadSavedRoom(roomId) {
+            try {
+                const { data, error } = await sb.from('rooms').select('*').eq('id', roomId).single();
+                if (error || !data) {
+                    sessionStorage.removeItem('xlaab_room_id');
+                    showPresenterDashboard();
+                    return;
+                }
+                room = data;
+                showWebinarDashboard();
+                setupRealtimeListeners();
+                connectToLiveKit();
+                startViewerCountUpdate();
+            } catch (e) {
+                console.error('Error loading saved room:', e);
+                sessionStorage.removeItem('xlaab_room_id');
+                showPresenterDashboard();
+            }
+        }
+
+        function toggleAuthMode() {
+            isSignUpMode = !isSignUpMode;
+            const title = document.getElementById('authTitle');
+            const subtitle = document.getElementById('authSubtitle');
+            const btn = document.getElementById('authBtn');
+            const toggleText = document.getElementById('authToggleText');
+            const toggleLink = document.getElementById('authToggleLink');
+            const nameGroup = document.getElementById('nameGroup');
+
+            if (isSignUpMode) {
+                title.textContent = 'Criar conta';
+                subtitle.textContent = 'Registre-se para comecar';
+                btn.textContent = 'Criar conta';
+                toggleText.textContent = 'Ja tem conta?';
+                toggleLink.textContent = 'Entrar';
+                nameGroup.style.display = 'block';
+            } else {
+                title.textContent = 'Entrar';
+                subtitle.textContent = 'Acesse o painel do apresentador';
+                btn.textContent = 'Entrar';
+                toggleText.textContent = 'Nao tem conta?';
+                toggleLink.textContent = 'Criar conta';
+                nameGroup.style.display = 'none';
+            }
+            document.getElementById('authError').style.display = 'none';
+        }
+
+        function showAuthError(msg) {
+            const el = document.getElementById('authError');
+            el.textContent = msg;
+            el.style.display = 'block';
+        }
+
+        document.getElementById('authForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('emailInput').value.trim();
+            const password = document.getElementById('passwordInput').value;
+            const name = document.getElementById('nameInput').value.trim();
+            const btn = document.getElementById('authBtn');
+
+            btn.disabled = true;
+            document.getElementById('authError').style.display = 'none';
+
+            try {
+                if (isSignUpMode) {
+                    if (!name) {
+                        showAuthError('Informe seu nome.');
+                        btn.disabled = false;
+                        return;
+                    }
+                    const { data, error } = await sb.auth.signUp({
+                        email,
+                        password,
+                        options: { data: { name } }
+                    });
                     if (error) throw error;
-                    room = data;
-                    console.log('Created new room:', room.id, room.slug);
+                    if (data.user) {
+                        currentUser = data.user;
+                        onAuthSuccess();
+                    } else {
+                        showAuthError('Verifique seu e-mail para confirmar o cadastro.');
+                    }
+                } else {
+                    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+                    if (error) throw error;
+                    currentUser = data.user;
+                    onAuthSuccess();
+                }
+            } catch (error) {
+                showAuthError(error.message || 'Erro na autenticacao.');
+            }
+            btn.disabled = false;
+        });
+
+        async function logout() {
+            await sb.auth.signOut();
+            currentUser = null;
+            room = null;
+            sessionStorage.removeItem('xlaab_room_id');
+            document.getElementById('presenterDashboardScreen').classList.remove('active');
+            document.getElementById('dashboardScreen').classList.remove('active');
+            showLoginScreen();
+        }
+
+        // ========== PRESENTER DASHBOARD ==========
+        function showPresenterDashboard() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('dashboardScreen').classList.remove('active');
+            document.getElementById('presenterDashboardScreen').classList.add('active');
+
+            const userName = currentUser?.user_metadata?.full_name || currentUser?.email || 'Apresentador';
+            document.getElementById('pdGreeting').innerHTML = 'Ola, <strong>' + escapeHtml(userName) + '</strong>';
+            document.getElementById('profileName').textContent = userName;
+            document.getElementById('profileEmail').textContent = currentUser?.email || '-';
+
+            loadMyWebinars();
+        }
+
+        async function loadMyWebinars() {
+            const listEl = document.getElementById('webinarList');
+            listEl.innerHTML = '<div class="webinar-list-empty">Carregando...</div>';
+
+            try {
+                const { data, error } = await sb.from('rooms')
+                    .select('*')
+                    .eq('presenter_id', currentUser.id)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    listEl.innerHTML = '<div class="webinar-list-empty">Nenhum webinario encontrado. Crie o seu primeiro!</div>';
+                    return;
                 }
 
+                listEl.innerHTML = '';
+                data.forEach(w => {
+                    const statusLabels = { 'waiting': 'Aguardando', 'live': 'Ao Vivo', 'ended': 'Encerrado' };
+                    const dateStr = w.created_at ? new Date(w.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-';
+                    const item = document.createElement('div');
+                    item.className = 'webinar-item';
+                    item.onclick = () => openExistingWebinar(w.id);
+                    item.innerHTML = `
+                        <div class="webinar-item-left">
+                            <div class="webinar-item-title">${escapeHtml(w.title)}</div>
+                            <div class="webinar-item-date">${dateStr}</div>
+                        </div>
+                        <div class="webinar-item-status ${w.status || 'waiting'}">${statusLabels[w.status] || w.status || 'Aguardando'}</div>
+                    `;
+                    listEl.appendChild(item);
+                });
+            } catch (e) {
+                console.error('Error loading webinars:', e);
+                listEl.innerHTML = '<div class="webinar-list-empty">Erro ao carregar webinarios.</div>';
+            }
+        }
+
+        async function openExistingWebinar(roomId) {
+            try {
+                const { data, error } = await sb.from('rooms').select('*').eq('id', roomId).single();
+                if (error) throw error;
+                room = data;
+                sessionStorage.setItem('xlaab_room_id', room.id);
+                showWebinarDashboard();
                 setupRealtimeListeners();
-                document.getElementById('createRoomScreen').classList.remove('active');
-                document.getElementById('dashboardScreen').classList.add('active');
-                document.getElementById('topBarTitle').textContent = room.title;
-                updateStatusBadge();
-            connectToLiveKit();
-            } catch (err) {
-                console.error('Erro ao criar sala:', err);
-                alert('Erro ao criar sala: ' + err.message);
+                connectToLiveKit();
+                startViewerCountUpdate();
+            } catch (e) {
+                alert('Erro ao abrir webinario: ' + e.message);
+            }
+        }
+
+        // ========== CREATE ROOM MODAL ==========
+        function showCreateRoomModal() {
+            document.getElementById('createRoomModalOverlay').classList.add('active');
+            document.getElementById('titleInput').value = '';
+            document.getElementById('titleInput').focus();
+        }
+
+        function hideCreateRoomModal() {
+            document.getElementById('createRoomModalOverlay').classList.remove('active');
+        }
+
+        document.getElementById('createRoomModalOverlay').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('createRoomModalOverlay')) hideCreateRoomModal();
+        });
+
+        document.getElementById('createRoomForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const title = document.getElementById('titleInput').value.trim();
+            if (title) {
+                hideCreateRoomModal();
+                createRoom(title);
+            }
+        });
+
+        // ========== ROOM CREATION ==========
+        async function createRoom(title) {
+            try {
+                // Check if there's an existing room with same title for this presenter that can be reused
+                const { data: existing } = await sb.from('rooms')
+                    .select('*')
+                    .eq('presenter_id', currentUser.id)
+                    .eq('title', title)
+                    .in('status', ['waiting', 'live'])
+                    .limit(1);
+
+                if (existing && existing.length > 0) {
+                    room = existing[0];
+                } else {
+                    const { data, error } = await sb.from('rooms').insert([{
+                        title,
+                        slug: generateSlug(),
+                        status: 'waiting',
+                        current_slide: 1,
+                        total_slides: 0,
+                        screen_sharing: false,
+                        presenter_key: generatePresenterKey(),
+                        presenter_id: currentUser.id
+                    }]).select().single();
+                    if (error) throw error;
+                    room = data;
+                }
+
+                sessionStorage.setItem('xlaab_room_id', room.id);
+                showWebinarDashboard();
+                setupRealtimeListeners();
+                connectToLiveKit();
+                startViewerCountUpdate();
+            } catch (error) {
+                alert('Erro ao criar webinario: ' + error.message);
             }
         }
 
@@ -984,11 +1454,33 @@ let room = null;
             return Math.random().toString(36).substring(2, 15);
         }
 
-        function showDashboard() {
-            document.getElementById('createRoomScreen').classList.remove('active');
+        // ========== WEBINAR DASHBOARD ==========
+        function showWebinarDashboard() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('presenterDashboardScreen').classList.remove('active');
             document.getElementById('dashboardScreen').classList.add('active');
             document.getElementById('topBarTitle').textContent = room.title;
             updateStatusBadge();
+
+            // Reset upload zone visibility based on whether PDF was already loaded
+            document.getElementById('uploadZone').style.display = '';
+            document.getElementById('pdfCanvas').style.display = 'none';
+            currentPdfDoc = null;
+            currentPage = 1;
+        }
+
+        function goBackToPanel() {
+            // Clean up realtime subscriptions
+            if (roomChannel) {
+                sb.removeChannel(roomChannel);
+                roomChannel = null;
+            }
+            room = null;
+            sessionStorage.removeItem('xlaab_room_id');
+            document.getElementById('dashboardScreen').classList.remove('active');
+            document.getElementById('chatMessages').innerHTML = '';
+            document.getElementById('participantsList').innerHTML = '';
+            showPresenterDashboard();
         }
 
         function updateStatusBadge() {
@@ -998,6 +1490,7 @@ let room = null;
             badge.textContent = labels[room.status] || room.status;
         }
 
+        // ========== PDF UPLOAD/RENDERING ==========
         function setupUploadZone() {
             const zone = document.getElementById('uploadZone');
             zone.addEventListener('click', () => {
@@ -1095,33 +1588,79 @@ let room = null;
             await sb.from('rooms').update({ current_slide: currentPage }).eq('id', room.id);
         }
 
+        // ========== KEYBOARD NAVIGATION ==========
+        document.addEventListener('keydown', (e) => {
+            // Don't navigate slides when typing in inputs
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            if (room && currentPdfDoc) {
+                if (e.key === 'ArrowRight') nextSlide();
+                else if (e.key === 'ArrowLeft') prevSlide();
+            }
+        });
+
+        // ========== REALTIME / CHAT / PARTICIPANTS ==========
         function setupRealtimeListeners() {
-            // Clean up existing channels
-            if (roomChannel) { sb.removeChannel(roomChannel); roomChannel = null; }
-            if (chatChannel) { sb.removeChannel(chatChannel); chatChannel = null; }
-            if (participantChannel) { sb.removeChannel(participantChannel); participantChannel = null; }
+            roomChannel = sb.channel('room-' + room.id);
+            roomChannel.on('broadcast', { event: 'participant_joined' }, () => { updateViewerCount(); });
+            roomChannel.subscribe();
 
-            // Listen for participant changes
-            participantChannel = sb.channel('presenter-participants-' + room.id);
-            participantChannel.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'participants', filter: 'room_id=eq.' + room.id }, (payload) => {
-                loadParticipants();
-                updateViewerCount();
-            });
-            participantChannel.subscribe((status) => { console.log('Participant channel:', status); if (status === 'SUBSCRIBED') { loadParticipants(); updateViewerCount(); } });
+            sb.channel('participants-' + room.id)
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'participants' }, () => {
+                    updateViewerCount();
+                    loadParticipants();
+                }).subscribe();
 
-            // Listen for chat messages
-            chatChannel = sb.channel('presenter-chat-' + room.id);
-            chatChannel.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: 'room_id=eq.' + room.id }, (payload) => {
-                addChatMessage(payload.new);
-            });
-            chatChannel.subscribe((status) => { console.log('Chat channel:', status); });
+            sb.channel('chat-' + room.id)
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, (payload) => {
+                    if (payload.new.room_id === room.id) addChatMessage(payload.new);
+                }).subscribe();
 
-            // Carregar participantes existentes ao iniciar
+            // Load existing data
+            loadChatHistory();
             loadParticipants();
             updateViewerCount();
         }
 
+        async function loadChatHistory() {
+            if (!room) return;
+            try {
+                const { data, error } = await sb.from('chat_messages')
+                    .select('*')
+                    .eq('room_id', room.id)
+                    .order('created_at', { ascending: true });
+
+                if (error) throw error;
+                const container = document.getElementById('chatMessages');
+                container.innerHTML = '';
+                if (data && data.length > 0) {
+                    data.forEach(msg => addChatMessage(msg));
+                }
+            } catch (e) {
+                console.error('Error loading chat history:', e);
+            }
+        }
+
+        async function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (!message || !room) return;
+
+            input.value = '';
+
+            try {
+                const { error } = await sb.from('chat_messages').insert([{
+                    room_id: room.id,
+                    nickname: 'Apresentador',
+                    message: message
+                }]);
+                if (error) throw error;
+            } catch (e) {
+                console.error('Error sending chat message:', e);
+            }
+        }
+
         async function updateViewerCount() {
+            if (!room) return;
             const { count } = await sb.from('participants').select('*', { count: 'exact', head: true }).eq('room_id', room.id).eq('is_active', true);
             document.getElementById('participantCount').textContent = count || 0;
         }
@@ -1133,56 +1672,55 @@ let room = null;
         }
 
         async function loadParticipants() {
+            if (!room) return;
             try {
-                if (!room || !room.id) {
-                    console.warn('loadParticipants: room not set');
-                    return;
+                // Try ordering by joined_at first, fall back to created_at
+                let result = await sb.from('participants')
+                    .select('*')
+                    .eq('room_id', room.id)
+                    .eq('is_active', true)
+                    .order('joined_at', { ascending: false });
+
+                // If joined_at column doesn't exist, the query will error - fall back
+                if (result.error) {
+                    result = await sb.from('participants')
+                        .select('*')
+                        .eq('room_id', room.id)
+                        .eq('is_active', true)
+                        .order('created_at', { ascending: false });
                 }
-                console.log('loadParticipants: querying for room', room.id);
-                const { data, error } = await sb.from('participants').select('*').eq('room_id', room.id).eq('is_active', true).order('joined_at', { ascending: true });
-                
-                if (error) {
-                    console.error('loadParticipants error:', error);
-                    return;
-                }
-                
-                console.log('loadParticipants: found', data ? data.length : 0, 'participants');
-                const container = document.getElementById('participantsList');
-                if (!container) { console.error('participantsList element not found'); return; }
-                container.innerHTML = '';
-                
+
+                const data = result.data;
+                const list = document.getElementById('participantsList');
+                list.innerHTML = '';
+
                 if (!data || data.length === 0) {
-                    container.innerHTML = '<div class="empty-state">Nenhum participante conectado</div>';
+                    list.innerHTML = '<div class="empty-state">Nenhum participante conectado</div>';
                     return;
                 }
-                
+
                 data.forEach(p => {
                     const div = document.createElement('div');
                     div.className = 'participant-item';
-                    div.innerHTML = '<span class="participant-dot"></span>' + (p.nickname || 'Anonimo');
-                    container.appendChild(div);
+                    div.innerHTML = `<div class="participant-dot"></div><div class="participant-name">${escapeHtml(p.nickname)}</div>`;
+                    list.appendChild(div);
                 });
-            } catch (err) {
-                console.error('loadParticipants exception:', err);
+            } catch (e) {
+                console.error('Error loading participants:', e);
             }
         }
 
         function addChatMessage(msg) {
             const container = document.getElementById('chatMessages');
             const div = document.createElement('div');
-            div.className = 'chat-message';
+            const isPresenter = msg.nickname === 'Apresentador';
+            div.className = 'chat-message' + (isPresenter ? ' presenter-msg' : '');
             div.innerHTML = `<div class="chat-nickname">${escapeHtml(msg.nickname)}</div><div class="chat-text">${escapeHtml(msg.message)}</div>`;
             container.appendChild(div);
             container.scrollTop = container.scrollHeight;
         }
 
-        document.addEventListener('keydown', (e) => {
-            if (room && currentPdfDoc) {
-                if (e.key === 'ArrowRight') nextSlide();
-                else if (e.key === 'ArrowLeft') prevSlide();
-            }
-        });
-
+        // ========== LIVEKIT ==========
         async function connectToLiveKit() {
             if (!LIVEKIT_URL) {
                 console.warn('LiveKit URL not configured');
@@ -1235,7 +1773,7 @@ let room = null;
                 cameraEnabled = !cameraEnabled;
                 localTracks.video.enabled = cameraEnabled;
                 const status = document.getElementById('videoStatus');
-                status.textContent = cameraEnabled ? 'Câmera ativa' : 'Câmera desligada';
+                status.textContent = cameraEnabled ? 'Camera ativa' : 'Camera desligada';
                 updateMediaButtons();
             }
         }
@@ -1249,6 +1787,7 @@ let room = null;
             else cameraBtn.classList.remove('active');
         }
 
+        // ========== GO LIVE / END ==========
         async function goLive() {
             await sb.from('rooms').update({ status: 'live' }).eq('id', room.id);
             room.status = 'live';
@@ -1265,6 +1804,7 @@ let room = null;
             document.getElementById('goLiveBtn').style.display = 'block';
         }
 
+        // ========== SHARE MODAL ==========
         function showShareModal() {
             const url = `${window.location.origin}/assistir?sala=${room.slug}`;
             document.getElementById('shareUrl').value = url;
@@ -1275,12 +1815,14 @@ let room = null;
             document.getElementById('shareModal').classList.remove('active');
         }
 
+        // ========== UTILITIES ==========
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
 
+        // ========== TAB SWITCHING ==========
         document.querySelectorAll('.tab').forEach(tab => {
             tab.addEventListener('click', () => {
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -1291,12 +1833,7 @@ let room = null;
             });
         });
 
-        document.getElementById('createRoomForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const title = document.getElementById('titleInput').value.trim();
-            if (title) createRoom(title);
-        });
-
+        // ========== EVENT LISTENERS ==========
         document.getElementById('shareBtn').addEventListener('click', showShareModal);
         document.getElementById('closeShareBtn').addEventListener('click', closeShareModal);
         document.getElementById('shareModal').addEventListener('click', (e) => {
@@ -1305,8 +1842,14 @@ let room = null;
         document.getElementById('copyBtn').addEventListener('click', () => {
             const url = document.getElementById('shareUrl');
             url.select();
-            document.execCommand('copy');
-            alert('Link copiado!');
+            navigator.clipboard.writeText(url.value).then(() => {
+                document.getElementById('copyBtn').textContent = 'Copiado!';
+                setTimeout(() => { document.getElementById('copyBtn').textContent = 'Copiar'; }, 2000);
+            }).catch(() => {
+                document.execCommand('copy');
+                document.getElementById('copyBtn').textContent = 'Copiado!';
+                setTimeout(() => { document.getElementById('copyBtn').textContent = 'Copiar'; }, 2000);
+            });
         });
         document.getElementById('prevSlideBtn').addEventListener('click', prevSlide);
         document.getElementById('nextSlideBtn').addEventListener('click', nextSlide);
@@ -1315,6 +1858,7 @@ let room = null;
         document.getElementById('goLiveBtn').addEventListener('click', goLive);
         document.getElementById('endBtn').addEventListener('click', endWebinar);
 
+        // ========== INIT ==========
         initSupabase();
         setupUploadZone();
     </script>
