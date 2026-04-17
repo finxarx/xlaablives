@@ -636,7 +636,7 @@
             chatChannel.subscribe();
         }
 
-        function addChatMessage(msg) {
+        function addChatMessage(msg) { if (msg.participant_id && participant && msg.participant_id !== participant.id) return;
             const container = document.getElementById('chatMessages');
             // Skip duplicates
             if (msg.id && container.querySelector('[data-msg-id="' + msg.id + '"]')) return;
