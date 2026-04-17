@@ -1,9 +1,13 @@
-<!DOCTYPE html>
+
+            <div class="video-preview" id="videoPreview" style="display: none;">
+                <video id="remoteVideo" autoplay playsinline></video>
+            </div>
+        <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xlaablives - Assistir WebinÃ¡rio</title>
+    <title>Xlaablives - Assistir WebinÃÂ¡rio</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/livekit-client@2/dist/livekit-client.umd.min.js"></script>
@@ -114,6 +118,7 @@
         }
         .webinar-screen {
             display: none;
+            position: relative;
             flex-direction: column;
             height: 100vh;
         }
@@ -231,6 +236,7 @@
             border: 1px solid var(--border);
             border-radius: 0.75rem;
             overflow: hidden;
+            max-height: 180px;
         }
         .chat-header {
             padding: 1rem;
@@ -345,7 +351,8 @@
         @media (max-width: 768px) {
             .webinar-screen { flex-direction: column; }
             .main-content { flex-direction: column; }
-            .chat-area { width: 100%; height: 300px; max-height: 300px; }
+            .chat-area { width: 100%; height: 150px; max-height: 150px; }
+            .video-preview { width: 140px; height: 105px; }
             .slides-area { min-height: 200px; }
             .header { flex-wrap: wrap; gap: 8px; padding: 8px; }
             .header h1, .logo { font-size: 1.2rem; }
@@ -377,7 +384,7 @@
     <div class="join-screen active" id="joinScreen">
         <div class="join-container">
             <div class="logo">Xlaablives</div>
-            <h1 class="join-title" id="joinTitle">Entrar no webinÃ¡rio</h1>
+            <h1 class="join-title" id="joinTitle">Entrar no webinÃÂ¡rio</h1>
             <p class="join-subtitle" id="joinSubtitle">Digite seu nome para participar</p>
             <div id="errorMessage" class="error-message" style="display: none;"></div>
             <form id="joinForm">
@@ -385,7 +392,7 @@
                     <label for="nicknameInput">Seu nome</label>
                     <input type="text" id="nicknameInput" placeholder="Digite seu nome" required>
                 </div>
-                <button type="submit" class="btn btn-primary">Entrar no webinÃ¡rio</button>
+                <button type="submit" class="btn btn-primary">Entrar no webinÃÂ¡rio</button>
             </form>
         </div>
     </div>
@@ -406,27 +413,25 @@
             <div class="slides-area">
                 <div class="slides-container">
                     <canvas id="pdfCanvas" style="display: none;"></canvas>
-                    <div id="waitingPlaceholder" class="waiting-message">O webinÃ¡rio comeÃ§arÃ¡ em breve</div>
+                    <div id="waitingPlaceholder" class="waiting-message">O webinÃÂ¡rio comeÃÂ§arÃÂ¡ em breve</div>
                     <div id="endedOverlay" class="ended-overlay">
                         <div class="ended-message">
-                            <h2>WebinÃ¡rio Encerrado</h2>
+                            <h2>WebinÃÂ¡rio Encerrado</h2>
                             <p>Obrigado por participar!</p>
                         </div>
                     </div>
                 </div>
                 <div class="slide-indicator" id="slideIndicator">Slide - / -</div>
                 <div id="liveKitNotice" class="livekit-notice" style="display: none;">
-                    â ï¸ LiveKit nÃ£o configurado. VÃ­deo do apresentador nÃ£o serÃ¡ exibido.
+                    Ã¢ÂÂ Ã¯Â¸Â LiveKit nÃÂ£o configurado. VÃÂ­deo do apresentador nÃÂ£o serÃÂ¡ exibido.
                 </div>
-                <div class="video-preview" id="videoPreview" style="display: none;">
-                    <video id="remoteVideo" autoplay playsinline></video>
-                </div>
+                
             </div>
 
             <div class="chat-area">
                 <div class="chat-header">Chat</div>
                 <div class="chat-messages" id="chatMessages">
-                    <div class="empty-chat">Envie uma mensagem para comeÃ§ar a conversar</div>
+                    <div class="empty-chat">Envie uma mensagem para comeÃÂ§ar a conversar</div>
                 </div>
                 <div class="chat-input-area">
                     <div class="chat-input-hint">Chat privado com o apresentador</div>
@@ -468,7 +473,7 @@
         async function loadRoom() {
             const slug = getRoomSlugFromUrl();
             if (!slug) {
-                showError('URL invÃ¡lida. ParÃ¢metro "sala" nÃ£o encontrado.');
+                showError('URL invÃÂ¡lida. ParÃÂ¢metro "sala" nÃÂ£o encontrado.');
                 return;
             }
 
@@ -483,7 +488,7 @@
             }
 
             if (error || !data) {
-                showError('WebinÃ¡rio nÃ£o encontrado. Verifique o link.');
+                showError('WebinÃÂ¡rio nÃÂ£o encontrado. Verifique o link.');
                 return;
             }
 
@@ -500,7 +505,7 @@
 
         async function joinWebinar(nickname) {
             if (!room) {
-                alert('Sala nÃ£o encontrada. Recarregue a pÃ¡gina.');
+                alert('Sala nÃÂ£o encontrada. Recarregue a pÃÂ¡gina.');
                 return;
             }
 
@@ -541,7 +546,7 @@
 
             } catch (err) {
                 console.error('Erro ao entrar:', err);
-                alert('Erro ao entrar no webinÃ¡rio. Tente novamente.');
+                alert('Erro ao entrar no webinÃÂ¡rio. Tente novamente.');
             }
         }
 
@@ -787,7 +792,7 @@
 
             function getPosition() {
                 const rect = videoEl.getBoundingClientRect();
-                const parentRect = videoEl.parentElement.getBoundingClientRect();
+                const parentRect = document.querySelector('.webinar-screen').getBoundingClientRect();
                 return {
                     left: rect.left - parentRect.left,
                     top: rect.top - parentRect.top
@@ -812,7 +817,7 @@
                 if (!isDragging) return;
                 const dx = clientX - startX;
                 const dy = clientY - startY;
-                const parent = videoEl.parentElement;
+                const parent = document.querySelector('.webinar-screen');
                 const maxLeft = parent.clientWidth - videoEl.offsetWidth;
                 const maxTop = parent.clientHeight - videoEl.offsetHeight;
                 let newLeft = Math.max(0, Math.min(initialLeft + dx, maxLeft));
